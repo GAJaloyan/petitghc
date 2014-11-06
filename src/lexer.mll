@@ -10,6 +10,7 @@ let lower = ['a'-'z']
 let alpha = ['a'-'z' 'A'-'Z']
 
 rule lexer = parse
+| empty+                { lexer lexbuf }
 | eof                   { Eof }
 | "if"                  { If }
 | "then"                { Then }
@@ -49,3 +50,8 @@ rule lexer = parse
 | '\'' (car as c) '\''  { Char c.[0] }
 | '"' (car* as str) '"' { String str }
 | (lower (alpha | '_' | '\'' | digit)*) as id { Ident id }
+
+
+
+{
+}

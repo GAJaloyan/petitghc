@@ -37,4 +37,4 @@ type token =
     | Int of int
     | Ident of string
     | Char of char
-    | Chain of string
+    | String of string
