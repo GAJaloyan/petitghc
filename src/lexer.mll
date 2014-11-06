@@ -12,6 +12,7 @@ let alpha = ['a'-'z' 'A'-'Z']
 rule lexer = parse
 | empty+                { lexer lexbuf }
 | eof                   { Eof }
+| "--" [^'\n']* '\n'?   { lexer lexbuf }
 | "if"                  { If }
 | "then"                { Then }
 | "else"                { Else }
@@ -50,8 +51,6 @@ rule lexer = parse
 | '\'' (car as c) '\''  { Char c.[0] }
 | '"' (car* as str) '"' { String str }
 | (lower (alpha | '_' | '\'' | digit)*) as id { Ident id }
-
-
 
 {
 }
