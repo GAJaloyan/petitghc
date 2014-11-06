@@ -3,6 +3,7 @@ type token =
     | If
     | Then
     | Else
+    | Assign
     | LeftCurly
     | RightCurly
     | LeftBracket
@@ -33,7 +34,6 @@ type token =
     | Semicolon
     | Let
     | In
-    | Assign
     | Int of int
     | Ident of string
     | Char of char
