@@ -7,6 +7,8 @@ let string_of_token = function
     | Assign        -> "Assign"
     | LeftCurly     -> "LeftCurly"
     | RightCurly    -> "RightCurly"
+    | LeftBracket   -> "LeftBracket"
+    | RightBracket  -> "RightBracket"
     | LeftPar       -> "LeftPar"
     | RightPar      -> "RightPar"
     | Plus          -> "Plus"
@@ -34,9 +36,9 @@ let string_of_token = function
     | Let           -> "Let"
     | In            -> "In"
     | Int n         -> "Int " ^ string_of_int n
-    | Ident id      -> "Ident " ^ v
-    | Char c        -> "Char " ^ escaped c
-    | Chain s       -> "String " ^ s
+    | Ident id      -> "Ident " ^ id
+    | Char c        -> "Char " ^ Char.escaped c
+    | String s      -> "String " ^ s
 
 let lexbuf = Lexing.from_channel (open_in Sys.argv.(1))
 
