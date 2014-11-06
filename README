@@ -1,0 +1,61 @@
+This is my compilation project for the course on compilation at the ENS Paris. The goal
+is to make a compiler for a portion of haskell, called Petit Haskell, producted in MIPS. It
+contains only integers and lists and is 100% compatible with Haskell.
+
+Lexical conventions: spaces, tabulations and newlines are considered as blank characters.
+Comments start with a -- and end at the end of the line. The identifiers obey the
+regular expression <indent> with is:
+
+<digit> ::= 0-9
+<alpha> ::= a-z | A-Z
+<ident> ::= (a-z) (<alpha> | _ | ' | <digit>)*
+
+In what follows, <ident_0> is the identifier placed in the first column and <ident_1> is
+any other identifier.
+
+The following identifiers are key words:
+else - if - in - let - case - of - then - return - do
+
+Finally, the litterals obey the following regular expressions:
+
+<int> ::= <digit>+
+<car> ::= any ASCII character whose code is in between 32 and 126 inclusive different then
+          \ and "
+<character> ::= '<car>'
+<chain> ::= "<car>*"
+
+The following grammar is the one of the source files. The input point is the non-terminal
+<file>. The associativities and the precedences of the operators are given in this table,
+from the weakest to the strongest:
+
+|------------------------|---------------|
+|Operator                | Associativity |
+|------------------------|---------------|
+| in                     |               |
+| else                   |               |
+| ->                     |               |
+| ||                     | left          |
+| &&                     | left          |
+| < <= > >= == /=        | left          |
+| :                      | right         |
+| + -                    | left          |
+| *                      | left          |
+| - (unary)              |               |
+| function application   | left          |
+|------------------------|---------------|
+
+<file> ::= <def_0>* EOF
+<def_0> ::= <ident_0> <ident_1>* = <expr>
+<def>   ::= <ident_1> <ident_1>* = <expr>
+<simple_expr>   ::= ( <expr> ) | <ident_1> | <const> | [ <expr>_,*]
+<expr>          ::= <simple_expr>+
+                  | \ <ident_1>+ -> <expr>
+                  | - <expr> | <expr> <op> <expr>
+                  | if <expr> then <expr> else <expr>
+                  | let <bindings> in <expr>
+                  | case <expr> of { [ ] -> <expr>; <ident_1> : <ident_1> -> <expr> ;? }
+                  | do { <expr>_;+;? }
+                  | return ( )
+<bindings>      ::= <def> | { <def>_;+;? }
+<op>            ::= + | - | * | <= | >= | > | < | /= | == | && | || | :
+<const>         ::= True | False | <int> | <caracter> | <chain>
