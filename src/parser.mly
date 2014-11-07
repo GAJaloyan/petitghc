@@ -22,6 +22,16 @@
 %token <char> Char
 %token <string> String
 
+%nonassoc In Lambda
+%nonassoc Else
+%left Or
+%left And
+%left Plus Minus
+%right Colon
+%nonassoc Greater GreaterEq Lower LowerEq Unequal Equal
+%left Time
+%nonassoc neg
+
 %start <Ast.file> file
 %%
 
@@ -36,26 +46,37 @@ simple_expression:
     | LeftPar e = expression RightPar { Ast.Par e }
     | i = Ident                       { Ast.Id i }
     | c = const                       { Ast.Cst c }
-    | RightBracket l = list           { Ast.List l }
+    | RightBracket l = eList           { Ast.List l }
 
-list:
-    | e = expression Comma l = list { e :: l }
+eList:
+    | e = expression Comma l = eList { e :: l }
     | e = expression LeftBracket    { [e] }
     | LeftBracket                   { [] }
 
 expression:
     | e = simple_expression { Ast.Simple e }
     | Lambda s = param e = expression { Ast.Lambda (s,e) }
-    | Minus e = expression { Ast.Ned expression }
-    | e1 = expression o = op e2 = expression { Ast.BinOp (e1,o,e2) }
+    | Minus e = expression { Ast.Neg expression } %prec neg
+    | e1 = expression o = Plus e2 = expression { Ast.BinOp (e1,Ast.Plus,e2) }
+    | e1 = expression o = Minus e2 = expression { Ast.BinOp (e1,Ast.Minus,e2) }
+    | e1 = expression o = Time e2 = expression { Ast.BinOp (e1,Ast.Time,e2) }
+    | e1 = expression o = Greater e2 = expression { Ast.BinOp (e1,Ast.Greater,e2) }
+    | e1 = expression o = GreaterEq e2 = expression { Ast.BinOp (e1,Ast.GreaterEq o,e2) }
+    | e1 = expression o = Lower e2 = expression { Ast.BinOp (e1,Ast.Lower o,e2) }
+    | e1 = expression o = LowerEq e2 = expression { Ast.BinOp (e1,Ast.LowerEq o,e2) }
+    | e1 = expression o = Unequal e2 = expression { Ast.BinOp (e1,Ast.Unequal o,e2) }
+    | e1 = expression o = Equal e2 = expression { Ast.BinOp (e1,Ast.Equal o,e2) }
+    | e1 = expression o = Colon e2 = expression { Ast.BinOp (e1,Ast.Colon o,e2) }
+    | e1 = expression o = Or e2 = expression { Ast.BinOp (e1,Ast.Or o,e2) }
+    | e1 = expression o = And e2 = expression { Ast.BinOp (e1,Ast.And o,e2) }
     | If e1 = expression Then e2 = expression Else e3 = expression { Ast.If (e1,e2,e3) }
     | Let b = bindings In e = expression { Ast.Let (b,e) }
     | Case e1 = expression Of LeftCurly LeftBracket RightBracket Arrow e2 = expression Semicolon i = Ident Colon is = Ident Arrow e3 = expression Semicolon? RightCurly { Ast.Case (e1,e2,i,is,e3) }
-    | Do LeftBracket l = toDo { Do l }
+    | Do LeftCurly l = toDo { Do l }
     | Return LeftPar RightPar { Return }
 
 toDo:
-    | d = expression Semicolon? RightBracket { [] }
+    | d = expression Semicolon? RightCurly { [] }
     | d = expression Semicolon l = toDo { d :: l }
 
 identList:
@@ -73,20 +94,6 @@ bindings:
 listBindings:
     | Semicolon? LeftBracket { [] }
     | d = definition Semicolon l = listBindings { d :: l }
-
-op:
-    | Plus      { Ast.Plus       }
-    | Minus     { Ast.Minus      }
-    | Time      { Ast.Time       }
-    | LowerEq   { Ast.LowerEq    }
-    | GreaterEq { Ast.GreaterEq  }
-    | Lower     { Ast.Lower      }
-    | Greater   { Ast.Greater    }
-    | Unequal   { Ast.Unequal    }
-    | Equal     { Ast.Equal      }
-    | And       { Ast.And        }
-    | Or        { Ast.Or         }
-    | Colon     { Ast.Colon      }
 
 const:
     | True          { Ast.True       }
