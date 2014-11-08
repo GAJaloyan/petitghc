@@ -1,5 +1,4 @@
 {
-    (*open Tokens*)
     exception LexingError
 
     let char_of_car s =
@@ -11,6 +10,11 @@
         | '\\' -> '\\'
         | _    -> raise LexingError
 
+    let newline lexbuf =
+        let pos = lexbuf.lex_curr_p in
+        lexbuf.lex_curr_p <-
+            { pos with pos_lnum = pos.pos_lnum + 1; pos_bol = pos.pos_cnum }
+
     let firstCol = ref true
 }
 
@@ -21,7 +25,7 @@ let lower = ['a'-'z']
 let alpha = ['a'-'z' 'A'-'Z']
 
 rule lexer = parse
-| '\n'                  { firstCol := true; lexer lexbuf }
+| '\n'                  { firstCol := true; newline lexbuf; lexer lexbuf }
 | empty+                { lexer lexbuf }
 | eof                   { Eof }
 | "--" [^'\n']* '\n'?   { firstCol := false; lexer lexbuf }
