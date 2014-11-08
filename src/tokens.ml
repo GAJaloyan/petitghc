@@ -36,5 +36,6 @@ type token =
     | In
     | Int of int
     | Ident of string
+    | Ident0 of string
     | Char of char
     | String of string

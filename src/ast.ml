@@ -9,7 +9,7 @@ type simple_expr =
     | Par of expr | Id of ident | Cst of const | List of (expr list)
 
 and expr =
-    | Simple of simple_expr
+    | Simple of (simple_expr list)
     | Lambda of (ident list) * expr
     | Neg of expr
     | BinOp of expr * op * expr

@@ -1,5 +1,5 @@
 {
-    open Tokens
+    (*open Tokens*)
     exception LexingError
 
     let char_of_car s =
@@ -10,6 +10,8 @@
         | '"'  -> '"'
         | '\\' -> '\\'
         | _    -> raise LexingError
+
+    let firstCol = ref true
 }
 
 let digit = ['0'-'9']
@@ -19,45 +21,46 @@ let lower = ['a'-'z']
 let alpha = ['a'-'z' 'A'-'Z']
 
 rule lexer = parse
+| '\n'                  { firstCol := true; lexer lexbuf }
 | empty+                { lexer lexbuf }
 | eof                   { Eof }
-| "--" [^'\n']* '\n'?   { lexer lexbuf }
-| "if"                  { If }
-| "then"                { Then }
-| "else"                { Else }
-| "="                   { Assign }
-| "{"                   { LeftCurly }
-| "}"                   { RightCurly }
-| "["                   { LeftBracket }
-| "]"                   { RightBracket }
-| "("                   { LeftPar }
-| ")"                   { RightPar }
-| "+"                   { Plus }
-| "-"                   { Minus }
-| "*"                   { Time }
-| ">"                   { Greater }
-| ">="                  { GreaterEq }
-| "<"                   { Lower }
-| "<="                  { LowerEq }
-| "/="                  { Unequal }
-| "=="                  { Equal }
-| "&&"                  { And }
-| "||"                  { Or }
-| ":"                   { Colon }
-| "return"              { Return }
-| "do"                  { Do }
-| "case"                { Case }
-| "of"                  { Of }
-| "True"                { True }
-| "False"               { False }
-| ","                   { Comma }
-| "\\"                  { Lambda }
-| "->"                  { Arrow }
-| ";"                   { Semicolon }
-| "let"                 { Let }
-| "in"                  { In }
-| digit+ as inum        { Int (int_of_string inum) }
-| '\'' (car as c) '\''  { Char (char_of_car c) }
-| '"' (car* as str) '"' { String str }
-| (lower (alpha | '_' | '\'' | digit)*) as id { Ident id }
+| "--" [^'\n']* '\n'?   { firstCol := false; lexer lexbuf }
+| "if"                  { firstCol := false; If }
+| "then"                { firstCol := false; Then }
+| "else"                { firstCol := false; Else }
+| "="                   { firstCol := false; Assign }
+| "{"                   { firstCol := false; LeftCurly }
+| "}"                   { firstCol := false; RightCurly }
+| "["                   { firstCol := false; LeftBracket }
+| "]"                   { firstCol := false; RightBracket }
+| "("                   { firstCol := false; LeftPar }
+| ")"                   { firstCol := false; RightPar }
+| "+"                   { firstCol := false; Plus }
+| "-"                   { firstCol := false; Minus }
+| "*"                   { firstCol := false; Time }
+| ">"                   { firstCol := false; Greater }
+| ">="                  { firstCol := false; GreaterEq }
+| "<"                   { firstCol := false; Lower }
+| "<="                  { firstCol := false; LowerEq }
+| "/="                  { firstCol := false; Unequal }
+| "=="                  { firstCol := false; Equal }
+| "&&"                  { firstCol := false; And }
+| "||"                  { firstCol := false; Or }
+| ":"                   { firstCol := false; Colon }
+| "return"              { firstCol := false; Return }
+| "do"                  { firstCol := false; Do }
+| "case"                { firstCol := false; Case }
+| "of"                  { firstCol := false; Of }
+| "True"                { firstCol := false; True }
+| "False"               { firstCol := false; False }
+| ","                   { firstCol := false; Comma }
+| "\\"                  { firstCol := false; Lambda }
+| "->"                  { firstCol := false; Arrow }
+| ";"                   { firstCol := false; Semicolon }
+| "let"                 { firstCol := false; Let }
+| "in"                  { firstCol := false; In }
+| digit+ as inum        { firstCol := false; Int (int_of_string inum) }
+| '\'' (car as c) '\''  { firstCol := false; Char (char_of_car c) }
+| '"' (car* as str) '"' { firstCol := false; String str }
+| (lower (alpha | '_' | '\'' | digit)*) as id { if !firstCol then (firstCol := false; Ident0 id) else Ident id }
 | _                     { raise LexingError }

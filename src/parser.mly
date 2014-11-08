@@ -19,6 +19,7 @@
 %token In
 %token <int> Int
 %token <string> Ident
+%token <string> Ident0
 %token <char> Char
 %token <string> String
 
@@ -37,16 +38,23 @@
 
 file:
     | Eof { [] }
-    | d = definition ds = file { d :: ds }
+    | d = def0 ds = file { d :: ds }
 
-definition:
-    | i = Ident is = identList Assign e = expression { (i,is,e) }
+def0:
+    | i = Ident0 is = identList e = expression { (i,is,e) }
+    
+def:
+    | i = Ident is = identList e = expression { (i,is,e) }
 
-simple_expression:
+simple_expr:
     | LeftPar e = expression RightPar { Ast.Par e }
     | i = Ident                       { Ast.Id i }
     | c = const                       { Ast.Cst c }
     | RightBracket l = eList           { Ast.List l }
+
+list_simple_expr:
+    | s = simple_expr l = list_simple_expr { s :: l }
+    | s = simple_expr { [s] }
 
 eList:
     | e = expression Comma l = eList { e :: l }
@@ -54,7 +62,7 @@ eList:
     | LeftBracket                   { [] }
 
 expression:
-    | e = simple_expression { Ast.Simple e }
+    | e = list_simple_expr { Ast.Simple e }
     | Lambda s = param e = expression { Ast.Lambda (s,e) }
     | Minus e = expression { Ast.Neg e } %prec neg
     | e1 = expression Plus e2 = expression { Ast.BinOp (e1,Ast.Plus,e2) }
@@ -81,19 +89,19 @@ toDo:
 
 identList:
     | i = Ident l = identList { i :: l }
-    | Equal { [] }
+    | Assign { [] }
 
 param:
     | i = Ident p = param { i :: p }
     | i = Ident Arrow { [i] }
 
 bindings:
-    | d = definition { Ast.Def d }
+    | d = def { Ast.Def d }
     | LeftBracket l = listBindings { Ast.ListDef l }
 
 listBindings:
     | Semicolon? LeftBracket { [] }
-    | d = definition Semicolon l = listBindings { d :: l }
+    | d = def Semicolon l = listBindings { d :: l }
 
 const:
     | True          { Ast.True       }
