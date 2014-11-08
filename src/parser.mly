@@ -56,36 +56,36 @@ eList:
 expression:
     | e = simple_expression { Ast.Simple e }
     | Lambda s = param e = expression { Ast.Lambda (s,e) }
-    | Minus e = expression { Ast.Neg expression } %prec neg
-    | e1 = expression o = Plus e2 = expression { Ast.BinOp (e1,Ast.Plus,e2) }
-    | e1 = expression o = Minus e2 = expression { Ast.BinOp (e1,Ast.Minus,e2) }
-    | e1 = expression o = Time e2 = expression { Ast.BinOp (e1,Ast.Time,e2) }
-    | e1 = expression o = Greater e2 = expression { Ast.BinOp (e1,Ast.Greater,e2) }
-    | e1 = expression o = GreaterEq e2 = expression { Ast.BinOp (e1,Ast.GreaterEq o,e2) }
-    | e1 = expression o = Lower e2 = expression { Ast.BinOp (e1,Ast.Lower o,e2) }
-    | e1 = expression o = LowerEq e2 = expression { Ast.BinOp (e1,Ast.LowerEq o,e2) }
-    | e1 = expression o = Unequal e2 = expression { Ast.BinOp (e1,Ast.Unequal o,e2) }
-    | e1 = expression o = Equal e2 = expression { Ast.BinOp (e1,Ast.Equal o,e2) }
-    | e1 = expression o = Colon e2 = expression { Ast.BinOp (e1,Ast.Colon o,e2) }
-    | e1 = expression o = Or e2 = expression { Ast.BinOp (e1,Ast.Or o,e2) }
-    | e1 = expression o = And e2 = expression { Ast.BinOp (e1,Ast.And o,e2) }
+    | Minus e = expression { Ast.Neg e } %prec neg
+    | e1 = expression Plus e2 = expression { Ast.BinOp (e1,Ast.Plus,e2) }
+    | e1 = expression Minus e2 = expression { Ast.BinOp (e1,Ast.Minus,e2) }
+    | e1 = expression Time e2 = expression { Ast.BinOp (e1,Ast.Time,e2) }
+    | e1 = expression Greater e2 = expression { Ast.BinOp (e1,Ast.Greater,e2) }
+    | e1 = expression GreaterEq e2 = expression { Ast.BinOp (e1,Ast.GreaterEq,e2) }
+    | e1 = expression Lower e2 = expression { Ast.BinOp (e1,Ast.Lower,e2) }
+    | e1 = expression LowerEq e2 = expression { Ast.BinOp (e1,Ast.LowerEq,e2) }
+    | e1 = expression Unequal e2 = expression { Ast.BinOp (e1,Ast.Unequal,e2) }
+    | e1 = expression Equal e2 = expression { Ast.BinOp (e1,Ast.Equal,e2) }
+    | e1 = expression Colon e2 = expression { Ast.BinOp (e1,Ast.Colon,e2) }
+    | e1 = expression Or e2 = expression { Ast.BinOp (e1,Ast.Or,e2) }
+    | e1 = expression And e2 = expression { Ast.BinOp (e1,Ast.And,e2) }
     | If e1 = expression Then e2 = expression Else e3 = expression { Ast.If (e1,e2,e3) }
     | Let b = bindings In e = expression { Ast.Let (b,e) }
     | Case e1 = expression Of LeftCurly LeftBracket RightBracket Arrow e2 = expression Semicolon i = Ident Colon is = Ident Arrow e3 = expression Semicolon? RightCurly { Ast.Case (e1,e2,i,is,e3) }
-    | Do LeftCurly l = toDo { Do l }
-    | Return LeftPar RightPar { Return }
+    | Do LeftCurly l = toDo { Ast.Do l }
+    | Return LeftPar RightPar { Ast.Return }
 
 toDo:
     | d = expression Semicolon? RightCurly { [] }
     | d = expression Semicolon l = toDo { d :: l }
 
 identList:
-    | i = Ident l = identList { (Ast.Id i) :: l }
+    | i = Ident l = identList { i :: l }
     | Equal { [] }
 
 param:
-    | i = Ident p = param { (Ast.Id i) :: p }
-    | i = Ident Arrow { [Ast.Id i] }
+    | i = Ident p = param { i :: p }
+    | i = Ident Arrow { [i] }
 
 bindings:
     | d = definition { Ast.Def d }

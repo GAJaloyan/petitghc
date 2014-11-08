@@ -15,7 +15,7 @@ and expr =
     | BinOp of expr * op * expr
     | If of expr * expr * expr
     | Let of bindings * expr
-    | Case of expr * ident * ident * expr
+    | Case of expr * expr * ident * ident * expr
     | Do of expr list
     | Return
 
