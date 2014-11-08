@@ -84,8 +84,8 @@ expression:
     | Return LeftPar RightPar { Ast.Return }
 
 toDo:
-    | d = expression Semicolon? RightCurly { [] }
     | d = expression Semicolon l = toDo { d :: l }
+    | d = expression Semicolon? RightCurly { d::[] }
 
 identList:
     | i = Ident l = identList { i :: l }
@@ -97,10 +97,10 @@ param:
 
 bindings:
     | d = def { Ast.Def d }
-    | LeftBracket l = listBindings { Ast.ListDef l }
+    | LeftCurly l = listBindings { Ast.ListDef l }
 
 listBindings:
-    | Semicolon? LeftBracket { [] }
+    | Semicolon? RightCurly { [] }
     | d = def Semicolon l = listBindings { d :: l }
 
 const:
