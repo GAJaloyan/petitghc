@@ -2,6 +2,7 @@
     exception LexingError
 
     open Parser
+    open Lexing
 
     let char_of_car s =
         if String.length s = 1 then s.[0]
@@ -13,9 +14,9 @@
         | _    -> raise LexingError
 
     let newline lexbuf =
-        let pos = lexbuf.Lexing.lex_curr_p in
-        lexbuf.Lexing.lex_curr_p <-
-            { pos with Lexing.pos_lnum = pos.Lexing.pos_lnum + 1; Lexing.pos_bol = pos.Lexing.pos_cnum }
+        let pos = lexbuf.lex_curr_p in
+        lexbuf.lex_curr_p <-
+            { pos with pos_lnum = pos.pos_lnum + 1; pos_bol = pos.pos_cnum }
 
     let firstCol = ref true
 }
