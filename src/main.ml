@@ -105,13 +105,17 @@ let parseFile filename =
         let ast = file lexer lexbuf in
         exit 0
     end with
-    | Lexer.LexingError -> let pos = lexbuf.lex_curr_p in
-        Printf.printf ("File \"%s\", line %d, characters %d-%d\nlexical error\n") filename pos.pos_lnum pos.pos_cnum  (1 + pos.pos_cnum); exit 1
+    | Lexer.LexingError -> 
+        let pos1 = Lexing.lexeme_start_p lexbuf
+        and pos2 = Lexing.lexeme_end_p lexbuf in
+        Format.eprintf "%aLexical error.@." print_location (Loc(pos1,pos2));
+        exit 1
+        (*Printf.printf ("File \"%s\", line %d, characters %d-%d\nlexical error\n") filename pos.pos_lnum pos.pos_cnum  (1 + pos.pos_cnum); exit 1*)
     | Parser.Error -> 
-            let pos1 = Lexing.lexeme_start_p lexbuf
-            and pos2 = Lexing.lexeme_end_p lexbuf in
-            Format.eprintf "%aSyntax error.@." print_location (Loc(pos1,pos2));
-            exit 1
+        let pos1 = Lexing.lexeme_start_p lexbuf
+        and pos2 = Lexing.lexeme_end_p lexbuf in
+        Format.eprintf "%aSyntax error.@." print_location (Loc(pos1,pos2));
+        exit 1
     | _ -> exit 2
 
 let parseOnly = ref false
