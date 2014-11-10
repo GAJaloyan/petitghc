@@ -23,3 +23,6 @@ src/parser.mli src/parser.ml: src/parser.mly
 	ocamldep *.ml *.mli > .depend
 
 include .depend
+
+clean:
+	rm .depend; cd src; rm *.cmx *.cmi *.o *.automaton parser.ml parser.mli lexer.ml
