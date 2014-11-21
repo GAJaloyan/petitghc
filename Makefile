@@ -1,5 +1,8 @@
-all: src/lexer.cmo
-	cd src; ocamlopt -o petitghc ast.cmx parser.cmx lexer.cmx main.ml; mv petitghc ..
+all: src/lexer.cmo src/error.cmo
+	cd src; ocamlopt -o petitghc error.cmx ast.cmx parser.cmx lexer.cmx main.ml; mv petitghc ..
+
+src/error.cmo:
+	cd src; ocamlopt -c error.ml
 
 src/lexer.cmo: src/parser.cmo
 	cd src; ocamlopt -c lexer.ml
