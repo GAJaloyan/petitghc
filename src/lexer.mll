@@ -23,13 +23,13 @@
 
 let digit = ['0'-'9']
 let car   = ['\032'-'\033' '\035'-'\091' '\093'-'\126'] | "\\\\" | "\\\"" | "\\n" | "\\t"
-let empty = ['\n' '\t' ' ']
+let empty = ['\t' ' ']
 let lower = ['a'-'z']
 let alpha = ['a'-'z' 'A'-'Z']
 
 rule lexer = parse
 | '\n'                  { firstCol := true; newline lexbuf; lexer lexbuf }
-| empty+                { lexer lexbuf }
+| empty+                { firstCol := false; lexer lexbuf }
 | eof                   { Eof }
 | "--" [^'\n']* '\n'?   { firstCol := false; lexer lexbuf }
 | "if"                  { firstCol := false; If }
@@ -69,5 +69,11 @@ rule lexer = parse
 | digit+ as inum        { firstCol := false; Int (int_of_string inum) }
 | '\'' (car as c) '\''  { firstCol := false; Char (char_of_car c) }
 | '"' (car* as str) '"' { firstCol := false; String str }
-| (lower (alpha | '_' | '\'' | digit)*) as id { if !firstCol then (firstCol := false; Ident0 id) else Ident id }
+| (lower (alpha | '_' | '\'' | digit)*) as id 
+                        { if !firstCol 
+                          then begin
+                              firstCol := false;
+                              Ident0 id
+                          end
+                          else Ident id }
 | _                     { raise LexingError }

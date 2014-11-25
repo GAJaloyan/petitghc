@@ -1,6 +1,6 @@
-open Tokens
+open Parser
 let string_of_token = function
-    | Eof           -> "Eof"
+    | Parser.Eof           -> "Eof"
     | If            -> "If"
     | Then          -> "Then"
     | Else          -> "Else"
@@ -37,6 +37,7 @@ let string_of_token = function
     | In            -> "In"
     | Int n         -> "Int " ^ string_of_int n
     | Ident id      -> "Ident " ^ id
+    | Ident0 id     -> "Ident0 " ^ id
     | Char c        -> "Char " ^ Char.escaped c
     | String s      -> "String " ^ s
 
