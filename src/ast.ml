@@ -1,3 +1,5 @@
+(* astract syntax tree for the language *)
+
 type ident = string
 
 type loc = Lexing.position * Lexing.position

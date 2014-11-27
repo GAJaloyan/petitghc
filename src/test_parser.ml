@@ -7,7 +7,8 @@ let goodFiles =
     [ "tests/syntax/good/testfile-comment-1.hs";
       "tests/syntax/good/testfile-semicolon-1.hs";
       "tests/syntax/good/testfile-semicolon-2.hs";
-      "tests/syntax/good/testfile-semicolon-3.hs"
+      "tests/syntax/good/testfile-semicolon-3.hs";
+      "tests/syntax/good/testfile-string-1.hs"
     ]
 
 let badFiles =

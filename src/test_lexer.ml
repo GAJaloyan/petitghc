@@ -41,11 +41,41 @@ let string_of_token = function
     | Char c        -> "Char " ^ Char.escaped c
     | String s      -> "String " ^ s
 
-let lexbuf = Lexing.from_channel (open_in Sys.argv.(1))
+let test_file tfile = 
+    try
+    let lexbuf = Lexing.from_channel (open_in tfile) in
+    let rec print_code lexbuf =
+        let t = Lexer.lexer lexbuf in
+        print_endline (string_of_token t);
+        if t <> Eof then print_code lexbuf in
+    print_code lexbuf
+    with _ -> ()
 
-let rec print_code lexbuf =
-    let t = Lexer.lexer lexbuf in
-    print_endline (string_of_token t);
-    if t <> Eof then print_code lexbuf
+let goodFiles =
+    [ "tests/syntax/good/testfile-comment-1.hs";
+      "tests/syntax/good/testfile-semicolon-1.hs";
+      "tests/syntax/good/testfile-semicolon-2.hs";
+      "tests/syntax/good/testfile-semicolon-3.hs";
+      "tests/syntax/good/testfile-string-1.hs"
+    ]
 
-let () = print_code lexbuf
+let badFiles =
+    [ "tests/syntax/bad/testfile-character_literal-1.hs";
+      "tests/syntax/bad/testfile-do-1.hs";
+      "tests/syntax/bad/testfile-lambda-1.hs";
+      "tests/syntax/bad/testfile-lexical-1.hs";
+      "tests/syntax/bad/testfile-string_literal-1.hs";
+      "tests/syntax/bad/testfile-string_literal-2.hs";
+      "tests/syntax/bad/testfile-string_literal-3.hs";
+    ]
+
+let main () =
+    Printf.printf "No error should happen\n";
+    Printf.printf "%s\n"( Sys.getcwd ());
+    flush stdout;
+    List.iter test_file goodFiles;
+    Printf.printf "Errors should be signaled\n";
+    flush stdout;
+    List.iter test_file badFiles
+
+let () = main()

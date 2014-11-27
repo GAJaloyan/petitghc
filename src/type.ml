@@ -141,7 +141,7 @@ let find x env =
 
 (* W algorithm *)
 let rec w env = function
-    | Simple (Par e) -> w env e
+    | Simple (Par e,loc) -> w env e
     | Simple (Id x) ->
         find x env
     | Simple Cst (Int _) ->
