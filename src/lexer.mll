@@ -23,7 +23,8 @@
 }
 
 let digit = ['0'-'9']
-let car   = ['\032'-'\033' '\035'-'\091' '\093'-'\126'] | "\\\\" | "\\\"" | "\\n" | "\\t"
+let car   = ['\032'-'\033' '\035'-'\091' '\093'-'\126'] 
+let carEsc = car | "\\\\" | "\\\"" | "\\n" | "\\t"
 let empty = ['\t' ' ']
 let lower = ['a'-'z']
 let alpha = ['a'-'z' 'A'-'Z']
@@ -68,11 +69,8 @@ rule lexer = parse
 | "let"                 { firstCol := false; Let }
 | "in"                  { firstCol := false; In }
 | digit+ as inum        { firstCol := false; Int (int_of_string inum) }
-| '\'' (car as c) '\''  { firstCol := false; Char (char_of_car c) }
-| '"' (car* as str) '"' { firstCol := false; String str } 
-| '"' ([^ '"']+) '"' { raise (SyntaxError "illegal character in string") }
-| '"' [^'"']* eof { raise (SyntaxError "string is not terminated") }
-| '"' { raise (SyntaxError "illegal character in string") }
+| '\'' (carEsc as c) '\''  { firstCol := false; Char (char_of_car c) }
+| '"'                   { read_string (Buffer.create 17) lexbuf }
 | (lower (alpha | '_' | '\'' | digit)*) as id 
                         { if !firstCol
                           then begin
@@ -84,13 +82,10 @@ rule lexer = parse
 
 and read_string buf = parse
 | '"' { String (Buffer.contents buf) }
-| '\\' '/' { Buffer.add_char buf '/'; read_string buf lexbuf }
-| '\\' '/' { Buffer.add_char buf '\\'; read_string buf lexbuf }
-| '\\' 'b' { Buffer.add_char buf '\b'; read_string buf lexbuf }
-| '\\' 'f' { Buffer.add_char buf '\012'; read_string buf lexbuf }
+| '\\' '\\' { Buffer.add_char buf '\\'; read_string buf lexbuf }
 | '\\' 'n' { Buffer.add_char buf '\n'; read_string buf lexbuf }
-| '\\' 'r' { Buffer.add_char buf '\r'; read_string buf lexbuf }
 | '\\' 't' { Buffer.add_char buf '\t'; read_string buf lexbuf }
-| car      { Buffer.add_string buf (Lexing.lexeme lexbuf); read_string buf lexbuf }
+| '\\' '"' { Buffer.add_char buf '"'; read_string buf lexbuf }
+| car as c { Printf.printf "%c\n" c; flush stdout; Buffer.add_string buf (Lexing.lexeme lexbuf); read_string buf lexbuf }
 | eof { raise (SyntaxError ("String is not terminated")) }
 | _ { raise (SyntaxError "Illegal character in string") }
