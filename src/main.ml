@@ -5,33 +5,28 @@ module E = Error
  * Returns the ast associated the code in the file named filename and 
  * the possible exit code *)
 let parseFile filename =
-    try begin 
-        let lexbuf = L.from_channel (open_in filename) in
-        try begin
+    let lexbuf = L.from_channel (open_in filename) in
+    try begin
             lexbuf.L.lex_curr_p <- 
                 { lexbuf.L.lex_curr_p with L.pos_fname = filename };
             (Parser.file Lexer.lexer lexbuf,0)
-        end with
-        | Lexer.LexingError -> 
-            let pos1 = L.lexeme_start_p lexbuf
-            and pos2 = L.lexeme_end_p lexbuf in
-            Format.eprintf "%aLexical error.@." E.print_location (E.Loc(pos1,pos2));
-            ([],1)
-        | Parser.Error -> 
-            let pos1 = L.lexeme_start_p lexbuf
-            and pos2 = L.lexeme_end_p lexbuf in
-            Format.eprintf "%aSyntax error.@." E.print_location (E.Loc(pos1,pos2));
-            ([],1)
-        | Lexer.SyntaxError s ->
-            let pos1 = L.lexeme_start_p lexbuf
-            and pos2 = L.lexeme_end_p lexbuf in
-            Format.eprintf "%aSyntax error: " E.print_location (E.Loc(pos1,pos2));
-            Format.eprintf "%s.@." s;
-            ([],1)
     end with
-    | Sys_error _ ->
-        Format.eprintf  "File %s could not be read" filename;
-        ([],2)
+    | Lexer.LexingError -> 
+        let pos1 = L.lexeme_start_p lexbuf
+        and pos2 = L.lexeme_end_p lexbuf in
+        Format.eprintf "%aLexical error.@." E.print_location (E.Loc(pos1,pos2));
+        ([],1)
+    | Parser.Error -> 
+        let pos1 = L.lexeme_start_p lexbuf
+        and pos2 = L.lexeme_end_p lexbuf in
+        Format.eprintf "%aSyntax error.@." E.print_location (E.Loc(pos1,pos2));
+        ([],1)
+    | E.SyntaxError s ->
+        let pos1 = L.lexeme_start_p lexbuf
+        and pos2 = L.lexeme_end_p lexbuf in
+        Format.eprintf "%aSyntax error: " E.print_location (E.Loc(pos1,pos2));
+        Format.eprintf "%s.@." s;
+        ([],1)
     | _ ->
         Format.eprintf "Internal error";
         ([],2)

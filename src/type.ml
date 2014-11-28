@@ -141,14 +141,14 @@ let find x env =
 
 (* W algorithm *)
 let rec w env = function
-    | Simple (Par e,loc) -> w env e
-    | Simple (Id x) ->
+    | Simple (Par (e,_)) -> w env e
+    | Simple (Id (x,_)) ->
         find x env
-    | Simple Cst (Int _) ->
+    | Simple Cst ((Int _),_) ->
         Tinteger
-    | Simple Cst (Char _) ->
+    | Simple Cst ((Char _),_) ->
         Tchar
-    | Simple Cst (String _) ->
+    | Simple Cst ((String _),_) ->
         Tlist Tchar
     | Simple Cst _ ->
         Tbool
@@ -156,5 +156,32 @@ let rec w env = function
         let tparams = List.map (fun _ -> Tvar (V.create())) params in
         let tbody = w env body in
         List.fold_left (fun x acc -> Tarrow (Tvar (V.create()),acc)) tparams tbody
+    | Neg (e,l) -> let t = w env e in
+                   unify Integer t
+    | BinOp (e1,o,e2,_) ->
+        let t1 = w env e1 and t2 = w env e2 in
+        begin match o with
+        | Plus | Minus | Time ->
+          unify t1 Tinteger;
+          unify t2 Tinteger;
+          Tinteger
+        | LowerEq | GreaterEq | Greater | Lower | Unequal | Equal ->
+          unify t1 Tinteger;
+          unify t2 Tinteger;
+          Tbool
+        | And | Or ->
+          unify t1 Tbool;
+          unify t2 Tbool;
+          Tbool
+        | Colon ->
+          unify (Tlist t1) t2;
+          t1
+        end
+    | If (e1,e2,e3,_) ->
+        let t1 = w env e1 and t2 = w env e2 and t3 = w env e3 in
+        unify t1 Tbool;
+        unify t2 t3;
+        t2
+    | Let (
 
 (* on fait un fold sur la liste des definitions avec pour accumulateur l'environnement *)

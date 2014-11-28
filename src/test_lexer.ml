@@ -44,6 +44,7 @@ let string_of_token = function
 let test_file tfile = 
     try
     let lexbuf = Lexing.from_channel (open_in tfile) in
+    Printf.printf "%s\n" tfile; 
     let rec print_code lexbuf =
         let t = Lexer.lexer lexbuf in
         print_endline (string_of_token t);

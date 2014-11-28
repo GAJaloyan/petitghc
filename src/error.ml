@@ -1,4 +1,8 @@
+(* this file mainly fragments from the error utilities functions found
+ * in the minijazz compiler *)
 open Lexing
+
+exception SyntaxError of string
 
 type location =
     Loc of position (* Position of the first character *)

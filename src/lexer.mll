@@ -3,7 +3,7 @@
 
     open Parser
 
-    exception SyntaxError of string
+    module E = Error 
 
     let char_of_car s =
         if String.length s = 1 then s.[0]
@@ -30,49 +30,51 @@ let lower = ['a'-'z']
 let alpha = ['a'-'z' 'A'-'Z']
 
 rule lexer = parse
-| '\n'                  { firstCol := true; newline lexbuf; lexer lexbuf }
-| empty+                { firstCol := false; lexer lexbuf }
-| eof                   { Eof }
-| "--" [^'\n']* '\n'?   { firstCol := false; lexer lexbuf }
-| "if"                  { firstCol := false; If }
-| "then"                { firstCol := false; Then }
-| "else"                { firstCol := false; Else }
-| "{"                   { firstCol := false; LeftCurly }
-| "}"                   { firstCol := false; RightCurly }
-| "["                   { firstCol := false; LeftBracket }
-| "]"                   { firstCol := false; RightBracket }
-| "("                   { firstCol := false; LeftPar }
-| ")"                   { firstCol := false; RightPar }
-| "+"                   { firstCol := false; Plus }
-| "-"                   { firstCol := false; Minus }
-| "*"                   { firstCol := false; Time }
-| ">"                   { firstCol := false; Greater }
-| ">="                  { firstCol := false; GreaterEq }
-| "<"                   { firstCol := false; Lower }
-| "<="                  { firstCol := false; LowerEq }
-| "/="                  { firstCol := false; Unequal }
-| "=="                  { firstCol := false; Equal }
-| "&&"                  { firstCol := false; And }
-| "||"                  { firstCol := false; Or }
-| ":"                   { firstCol := false; Colon }
-| "="                   { firstCol := false; Assign }
-| "return"              { firstCol := false; Return }
-| "do"                  { firstCol := false; Do }
-| "case"                { firstCol := false; Case }
-| "of"                  { firstCol := false; Of }
-| "True"                { firstCol := false; True }
-| "False"               { firstCol := false; False }
-| ","                   { firstCol := false; Comma }
-| "\\"                  { firstCol := false; Lambda }
-| "->"                  { firstCol := false; Arrow }
-| ";"                   { firstCol := false; Semicolon }
-| "let"                 { firstCol := false; Let }
-| "in"                  { firstCol := false; In }
-| digit+ as inum        { firstCol := false; Int (int_of_string inum) }
-| '\'' (carEsc as c) '\''  { firstCol := false; Char (char_of_car c) }
-| '"'                   { read_string (Buffer.create 17) lexbuf }
+| '\n'                  { firstCol := true; (*Printf.printf "\n"; flush stdout;*) newline lexbuf; lexer lexbuf }
+| empty+ as c           { firstCol := false; (*Printf.printf "%s" c; flush stdout;*) lexer lexbuf }
+| eof                   { (*Printf.printf "eof"; flush stdout;*) Eof }
+| "--" [^'\n']* '\n'? as s { (*Printf.printf "%s" s; flush stdout;*) firstCol := false; lexer lexbuf }
+| "if"                  { (*Printf.printf "if"; flush stdout;*) firstCol := false; If }
+| "then"                { (*Printf.printf "then"; flush stdout;*) firstCol := false; Then }
+| "else"                { (*Printf.printf "else"; flush stdout;*) firstCol := false; Else }
+| "{"                   { (*Printf.printf "{"; flush stdout;*) firstCol := false; LeftCurly }
+| "}"                   { (*Printf.printf "}"; flush stdout;*) firstCol := false; RightCurly }
+| "["                   { (*Printf.printf "["; flush stdout;*) firstCol := false; LeftBracket }
+| "]"                   { (*Printf.printf "]"; flush stdout;*) firstCol := false; RightBracket }
+| "("                   { (*Printf.printf "("; flush stdout;*) firstCol := false; LeftPar }
+| ")"                   { (*Printf.printf ")"; flush stdout;*) firstCol := false; RightPar }
+| "+"                   { (*Printf.printf "+"; flush stdout;*) firstCol := false; Plus }
+| "-"                   { (*Printf.printf "-"; flush stdout;*) firstCol := false; Minus }
+| "*"                   { (*Printf.printf "*"; flush stdout;*) firstCol := false; Time }
+| ">"                   { (*Printf.printf ">"; flush stdout;*) firstCol := false; Greater }
+| ">="                  { (*Printf.printf ">="; flush stdout; *)firstCol := false; GreaterEq }
+| "<"                   { (*Printf.printf "<"; flush stdout;*) firstCol := false; Lower }
+| "<="                  { (*Printf.printf "<="; flush stdout;*) firstCol := false; LowerEq }
+| "/="                  { (*Printf.printf "/="; flush stdout;*) firstCol := false; Unequal }
+| "=="                  { (*Printf.printf "=="; flush stdout;*) firstCol := false; Equal }
+| "&&"                  { (*Printf.printf "&&"; flush stdout;*) firstCol := false; And }
+| "||"                  { (*Printf.printf "||"; flush stdout;*) firstCol := false; Or }
+| ":"                   { (*Printf.printf ":"; flush stdout;*) firstCol := false; Colon }
+| "="                   { (*Printf.printf "="; flush stdout;*) firstCol := false; Assign }
+| "return"              { (*Printf.printf "return"; flush stdout;*) firstCol := false; Return }
+| "do"                  { (*Printf.printf "do"; flush stdout;*) firstCol := false; Do }
+| "case"                { (*Printf.printf "case"; flush stdout;*) firstCol := false; Case }
+| "of"                  { (*Printf.printf "of";  flush stdout;*)firstCol := false; Of }
+| "True"                { (*Printf.printf "True"; flush stdout;*) firstCol := false; True }
+| "False"               { (*Printf.printf "False"; flush stdout;*) firstCol := false; False }
+| ","                   { (*Printf.printf ","; flush stdout;*) firstCol := false; Comma }
+| "\\"                  { (*Printf.printf "\\"; flush stdout;*) firstCol := false; Lambda }
+| "->"                  { (*Printf.printf "->"; flush stdout;*) firstCol := false; Arrow }
+| ";"                   { (*Printf.printf ";"; flush stdout;*) firstCol := false; Semicolon }
+| "let"                 { (*Printf.printf "let"; flush stdout;*) firstCol := false; Let }
+| "in"                  { (*Printf.printf "in"; flush stdout;*) firstCol := false; In }
+| digit+ as inum        { (*Printf.printf "%s\n" inum; flush stdout;*) firstCol := false; Int (int_of_string inum) }
+| '\'' (carEsc as c) '\''  { (*Printf.printf "'%s'" c; flush stdout;*) firstCol := false; Char (char_of_car c) }
+| '"'                   { (*Printf.printf "\""; flush stdout;*) firstCol := false;
+                          read_string (Buffer.create 17) lexbuf }
 | (lower (alpha | '_' | '\'' | digit)*) as id 
-                        { if !firstCol
+                        { (*Printf.printf "%s" id; flush stdout;*)
+                          if !firstCol
                           then begin
                               firstCol := false;
                               Ident0 id
@@ -81,11 +83,11 @@ rule lexer = parse
 | _                     { raise LexingError }
 
 and read_string buf = parse
-| '"' { String (Buffer.contents buf) }
-| '\\' '\\' { Buffer.add_char buf '\\'; read_string buf lexbuf }
-| '\\' 'n' { Buffer.add_char buf '\n'; read_string buf lexbuf }
-| '\\' 't' { Buffer.add_char buf '\t'; read_string buf lexbuf }
-| '\\' '"' { Buffer.add_char buf '"'; read_string buf lexbuf }
-| car as c { Printf.printf "%c\n" c; flush stdout; Buffer.add_string buf (Lexing.lexeme lexbuf); read_string buf lexbuf }
-| eof { raise (SyntaxError ("String is not terminated")) }
-| _ { raise (SyntaxError "Illegal character in string") }
+| '"' { (*Printf.printf "\""; flush stdout;*) String (Buffer.contents buf) }
+| '\\' '\\' { (*Printf.printf "\\\\"; flush stdout;*) Buffer.add_char buf '\\'; read_string buf lexbuf }
+| '\\' 'n' { (*Printf.printf "\\n"; flush stdout;*) Buffer.add_char buf '\n'; read_string buf lexbuf }
+| '\\' 't' { (*Printf.printf "\\t"; flush stdout;*) Buffer.add_char buf '\t'; read_string buf lexbuf }
+| '\\' '"' { (*Printf.printf "\\\""; flush stdout;*) Buffer.add_char buf '"'; read_string buf lexbuf }
+| car as c { (*Printf.printf "%c\n" c; flush stdout;*) Buffer.add_string buf (Lexing.lexeme lexbuf); read_string buf lexbuf }
+| eof { raise (E.SyntaxError "String is not terminated") }
+| _ as c { (*Printf.printf "%c" c; flush stdout;*) raise (E.SyntaxError "Illegal character in string") }
