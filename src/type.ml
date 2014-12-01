@@ -141,20 +141,23 @@ let find x env =
 
 (* W algorithm *)
 let rec w env = function
-    | Simple (Par e,loc) -> w env e
-    | Simple (Id x) ->
-        find x env
-    | Simple Cst (Int _) ->
-        Tinteger
-    | Simple Cst (Char _) ->
-        Tchar
-    | Simple Cst (String _) ->
-        Tlist Tchar
-    | Simple Cst _ ->
-        Tbool
-    | Lambda (params,body) -> 
+    | Simple (l,_) -> (* corresponds to function application *)
+        List.fold_left
+    | Lambda (params,body,_) -> 
         let tparams = List.map (fun _ -> Tvar (V.create())) params in
         let tbody = w env body in
         List.fold_left (fun x acc -> Tarrow (Tvar (V.create()),acc)) tparams tbody
+    | Neg (e,_) ->
+        unify Tinteger (w env e);
+        Tinteger
+    | BinOp (e1,o,e2,_) ->
+and ws env = function (* type of simple expressions *)
+    | Par (e,_)        -> w env e
+    | Id (x,_)         -> find x env
+    | Cst (Int _,_)    -> Tinteger
+    | Cst (Char _,_)   -> Tchar
+    | Cst (String _,_) -> Tlist Tchar
+    | Cst _            -> Tbool
+
 
 (* on fait un fold sur la liste des definitions avec pour accumulateur l'environnement *)
