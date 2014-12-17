@@ -3,11 +3,11 @@
 
     open Parser
 
-    exception SyntaxError of string
+    module E = Error 
 
     let char_of_car s =
         if String.length s = 1 then s.[0]
-        else match s.[1] with
+        else match s.[0] with
         | 'n'  -> '\n'
         | 't'  -> '\t'
         | '"'  -> '"'
@@ -31,9 +31,9 @@ let alpha = ['a'-'z' 'A'-'Z']
 
 rule lexer = parse
 | '\n'                  { firstCol := true; newline lexbuf; lexer lexbuf }
-| empty+                { firstCol := false; lexer lexbuf }
+| empty+ as c           { firstCol := false; lexer lexbuf }
 | eof                   { Eof }
-| "--" [^'\n']* '\n'?   { firstCol := false; lexer lexbuf }
+| "--" [^'\n']* '\n'? as s { firstCol := false; lexer lexbuf }
 | "if"                  { firstCol := false; If }
 | "then"                { firstCol := false; Then }
 | "else"                { firstCol := false; Else }
@@ -70,9 +70,11 @@ rule lexer = parse
 | "in"                  { firstCol := false; In }
 | digit+ as inum        { firstCol := false; Int (int_of_string inum) }
 | '\'' (carEsc as c) '\''  { firstCol := false; Char (char_of_car c) }
-| '"'                   { read_string (Buffer.create 17) lexbuf }
+| '"'                   { firstCol := false;
+                          read_string (Buffer.create 17) lexbuf }
 | (lower (alpha | '_' | '\'' | digit)*) as id 
-                        { if !firstCol
+                        { 
+                          if !firstCol
                           then begin
                               firstCol := false;
                               Ident0 id
@@ -81,11 +83,11 @@ rule lexer = parse
 | _                     { raise LexingError }
 
 and read_string buf = parse
-| '"' { String (Buffer.contents buf) }
+| '"'       { String (Buffer.contents buf) }
 | '\\' '\\' { Buffer.add_char buf '\\'; read_string buf lexbuf }
-| '\\' 'n' { Buffer.add_char buf '\n'; read_string buf lexbuf }
-| '\\' 't' { Buffer.add_char buf '\t'; read_string buf lexbuf }
-| '\\' '"' { Buffer.add_char buf '"'; read_string buf lexbuf }
-| car as c { Printf.printf "%c\n" c; flush stdout; Buffer.add_string buf (Lexing.lexeme lexbuf); read_string buf lexbuf }
-| eof { raise (SyntaxError ("String is not terminated")) }
-| _ { raise (SyntaxError "Illegal character in string") }
+| '\\' 'n'  { Buffer.add_char buf '\n'; read_string buf lexbuf }
+| '\\' 't'  { Buffer.add_char buf '\t'; read_string buf lexbuf }
+| '\\' '"'  { Buffer.add_char buf '"'; read_string buf lexbuf }
+| car as c  { Buffer.add_string buf (Lexing.lexeme lexbuf); read_string buf lexbuf }
+| eof       { raise (E.SyntaxError "String is not terminated") }
+| _ as c    { raise (E.SyntaxError "Illegal character in string") }

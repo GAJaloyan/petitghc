@@ -12,6 +12,16 @@ and tvar =
     { id : int;
       mutable def : typ option }
 
+let rec print_type = function
+    | Tbool -> Printf.printf "Bool"
+    | Tchar -> Printf.printf "Char"
+    | Tinteger -> Printf.printf "Integer"
+    | TIO -> Printf.printf "IO"
+    | Tvar _ -> Printf.printf "Tvar"
+    | Tarrow (t1,t2) -> Printf.printf "Tarrow "; print_type t1; 
+                        Printf.printf " "; print_type t2
+    | Tlist t -> Printf.printf "List "; print_type t
+
 (* module that encapsulates types variables and provides a function to 
  * compare them *)
 module V = struct
@@ -140,17 +150,56 @@ let find x env =
     subst tx.typ
 
 (* W algorithm *)
-let rec w env = function
-    | Simple (l,_) -> (* corresponds to function application *)
-        List.fold_left
-    | Lambda (params,body,_) -> 
-        let tparams = List.map (fun _ -> Tvar (V.create())) params in
-        let tbody = w env body in
-        List.fold_left (fun x acc -> Tarrow (Tvar (V.create()),acc)) tparams tbody
+let rec w env t = Ast.print_expr t; Printf.printf "\n";
+    match t with
+    | Simple (e::es,p) -> 
+       failwith "there shouldn't be any simple expressions"
+    | Single e ->
+        ws env e
+    | App (_,_) ->
+        failwith "app undefined"
+    | Lambda (param,body) -> 
+        failwith "lambda undefined"
     | Neg (e,_) ->
         unify Tinteger (w env e);
         Tinteger
     | BinOp (e1,o,e2,_) ->
+        let t1 = w env e1 and t2 = w env e2 in
+        begin match o with
+        | Plus | Minus | Time ->
+            unify t1 Tinteger; unify t2 Tinteger;
+            Tinteger
+        | LowerEq | GreaterEq | Greater | Lower | Unequal | Equal ->
+            unify t1 Tinteger; unify t2 Tinteger;
+            Tbool
+        | And | Or ->
+            unify t1 Tbool; unify t2 Tbool;
+            Tbool
+        | Colon ->
+            unify (Tlist t1) t2; Tlist t1
+        end
+    | If (e1,e2,e3,_) ->
+        let t1 = w env e1 and t2 = w env e2 and t3 = w env e3 in
+        unify t1 Tbool;
+        unify t2 t3;
+        t1
+    | Let (bs, e, _) ->
+         failwith "let undefined"
+    | Case (e1,e2,x1,x2,e3,_) ->
+         Printf.printf "case\n";
+         let t1 = w env e1 and t2 = w env e2 in
+         let env' = add true x2 t2 (add true x1 t1 env) in
+         let t3 = w env' e3 in
+         unify t3 t2;
+         print_type t1; Printf.printf "\n";
+         print_type t2; Printf.printf "\n";
+         print_type t3; Printf.printf "\n";
+         t2
+    | Do (es,_) -> 
+         List.iter (fun e -> unify (w env e) TIO) es;
+         TIO
+    | Return _ -> TIO
+
 and ws env = function (* type of simple expressions *)
     | Par (e,_)        -> w env e
     | Id (x,_)         -> find x env
@@ -158,6 +207,18 @@ and ws env = function (* type of simple expressions *)
     | Cst (Char _,_)   -> Tchar
     | Cst (String _,_) -> Tlist Tchar
     | Cst _            -> Tbool
+    | List ([],p)      -> failwith "we don't handle empty lists yet"
+    | List (ls,p)      -> w env (List.hd ls)
+
+and wd env = function
+    | (x,_,e,_) -> w env e
 
 
 (* on fait un fold sur la liste des definitions avec pour accumulateur l'environnement *)
+
+let infer (f : Ast.file) =
+    match f with
+    | [d] -> wd base d
+    | _   -> failwith "we don't deal with multiple definitions yet"
+
+

@@ -44,6 +44,7 @@ let string_of_token = function
 let test_file tfile = 
     try
     let lexbuf = Lexing.from_channel (open_in tfile) in
+    Printf.printf "%s\n" tfile; 
     let rec print_code lexbuf =
         let t = Lexer.lexer lexbuf in
         print_endline (string_of_token t);
@@ -56,7 +57,9 @@ let goodFiles =
       "tests/syntax/good/testfile-semicolon-1.hs";
       "tests/syntax/good/testfile-semicolon-2.hs";
       "tests/syntax/good/testfile-semicolon-3.hs";
-      "tests/syntax/good/testfile-string-1.hs"
+      "tests/syntax/good/testfile-string-1.hs";
+      "tests/typing/bad/testfile-duplicate-1.hs";
+      "tests/exec/church2.hs"
     ]
 
 let badFiles =

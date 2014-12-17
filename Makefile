@@ -1,6 +1,7 @@
 all:
 	ocamlbuild -I src src/main.native -use-menhir;
-	mv main.native petitghc
+	mv main.native petitghc;
+	./petitghc test.hs
 
 test_lexer:
 	ocamlbuild -I src src/test_lexer.native -use-menhir;
