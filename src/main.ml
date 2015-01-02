@@ -21,12 +21,6 @@ let parseFile filename =
         and pos2 = L.lexeme_end_p lexbuf in
         Format.eprintf "%aSyntax error.@." E.print_location (E.Loc(pos1,pos2));
         ([],1)
-    | E.SyntaxError s ->
-        let pos1 = L.lexeme_start_p lexbuf
-        and pos2 = L.lexeme_end_p lexbuf in
-        Format.eprintf "%aSyntax error: " E.print_location (E.Loc(pos1,pos2));
-        Format.eprintf "%s.@." s;
-        ([],1)
     | _ ->
         Format.eprintf "Internal error";
         ([],2)
@@ -39,9 +33,25 @@ let treatsFileExit filename =
     if !parseOnly || code <> 0 then
         exit code
     else begin
-        Type.print_type (Type.infer ast);
-        Printf.printf "\n";
+        try Type.infer ast;
+        if !typeOnly then
+            exit 0;
+        let ast' =  Simplify.simplify ast in
         exit 0
+        with
+        | E.SyntaxError s ->
+            (Format.eprintf "Syntax error: ";
+            Format.eprintf "%s.@." s;
+            exit 1)
+        | E.SemantError s ->
+            (Format.eprintf "Error: ";
+            Format.eprintf "%s.@." s;
+            exit 1)
+        | Type.UnificationFailure (t1,t2,(pos1,pos2)) ->
+            (Format.eprintf "%aTyping error. The error lies in %s <> %s@." E.print_location (E.Loc(pos1,pos2))
+                                                     (Type.type_to_string t1)
+                                                     (Type.type_to_string t2);
+            exit 1)
     end
 
 let main =

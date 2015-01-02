@@ -3,6 +3,8 @@
 open Lexing
 
 exception SyntaxError of string
+exception SemantError of string
+exception TypeError   of string
 
 type location =
     Loc of position (* Position of the first character *)

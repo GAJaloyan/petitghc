@@ -2,8 +2,11 @@
     module E = Error
 
     (* transforms a list of application to the curried form *)
-    let list_to_app ((e::es) : Ast.simple_expr list) =
-        List.fold_left (fun rep e -> Ast.App(rep,e)) (Ast.Single e) es
+    let list_to_app ((e::es) : Ast.simple_expr list) pos =
+        List.fold_left (fun rep e -> Ast.App(rep,e,pos)) (Ast.Single e) es
+    
+    let fun_to_lambda is e =
+        List.fold_right (fun x expr -> Ast.Lambda(x,expr)) is e
 %}
 %token Eof
 %token If Then Else
@@ -48,10 +51,16 @@ file:
     | d = def0; ds = file { d :: ds }
 
 def0:
-    | i = Ident0; is = identList; e = expression { (i,is,e,($startpos,$endpos)) }
+    | i = Ident0; is = identList; e = expression { 
+        if is = [] then (i,e,($startpos,$endpos)) 
+        else ((*i, fun_to_lambda is e,($startpos,$endpos)*)
+              (i,Ast.Fun (is,e),($startpos,$endpos)))}
     
 def:
-    | i = Ident; is = identList; e = expression { (i,is,e,($startpos,$endpos)) }
+    | i = Ident; is = identList; e = expression { 
+        if is = [] then (i,e,($startpos,$endpos)) 
+        else ((*i, fun_to_lambda is e,($startpos,$endpos)*)
+              (i,Ast.Fun (is,e),($startpos,$endpos)))}
 
 simple_expr:
     | LeftPar; e = expression; RightPar { Ast.Par (e,($startpos,$endpos)) }
@@ -69,9 +78,10 @@ eList:
     | RightBracket                      { [] }
 
 expression:
-    | es = list_simple_expr { list_to_app es }
+    | es = list_simple_expr { list_to_app es ($startpos,$endpos) }
     | Lambda; s = param; e = expression 
-        { List.fold_right (fun i e -> Ast.Lambda (i,e)) s e }
+        { (*List.fold_right (fun i e -> Ast.Lambda (i,e)) s e*)
+          Ast.Fun (s,e) }
     | Minus; e = expression { Ast.Neg (e,($startpos,$endpos)) } %prec neg
     | e1 = expression; Plus; e2 = expression 
         { Ast.BinOp (e1,Ast.Plus,e2,($startpos,$endpos)) }
@@ -128,7 +138,7 @@ bindings:
 
 listBindings:
     | d = def; Semicolon; l = listBindings { d :: l }
-    | d = def; Semicolon? RightCurly { [] }
+    | d = def; Semicolon? RightCurly { [d] }
 
 const:
     | True          { Ast.True ($startpos,$endpos)    }
