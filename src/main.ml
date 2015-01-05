@@ -36,7 +36,7 @@ let treatsFileExit filename =
         try Type.infer ast;
         if !typeOnly then
             exit 0;
-        let ast' =  Simplify.simplify ast in
+        let ast' = Make_closures.transform (Simplify.simplify ast) in
         exit 0
         with
         | E.SyntaxError s ->

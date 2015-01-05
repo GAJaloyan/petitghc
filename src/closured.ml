@@ -12,11 +12,13 @@ type expr =
   | Eclos of string * var list
   | Eapp of expr * expr
   | Ethunk of expr
-  | Elet of bindings * expr
+  | Elet of ((int * expr) list) * expr
   | Eif of expr * expr * expr
-  | Ecase of expr * expr * ident * ident * expr
+  | Ecase of expr * expr * int * int * expr
   | Edo of expr list
   | Ereturn
+  | Eneg of expr
+  | EbinOp of expr * op * expr
   | Etrue
   | Eint of int
   | Echar of char
