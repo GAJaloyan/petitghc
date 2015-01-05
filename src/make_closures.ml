@@ -16,6 +16,7 @@ let inter_op_closured = function
    | Inter.Colon -> C.Colon
 
 module SSet = Set.Make(String)
+module SMap = Map.Make(String)
 
 let globalNames = ref SSet.empty
 let globalDefs = ref []
@@ -51,10 +52,11 @@ let closureNb = ref 0
 let getClosureName () = 
    incr closureNb;
    let name = ref ("fun" ^ (string_of_int !closureNb)) in
-   while SSet.mem !name globalNames do
+   while SSet.mem !name !globalNames do
      incr closureNb;
-     !name = ref ("fun" ^ (string_of_int !closureNb))
+     name := ("fun" ^ (string_of_int !closureNb))
    done;
+   globalNames := SSet.add !name !globalNames;
    !name
 
 let getClosure env e =
@@ -62,7 +64,7 @@ let getClosure env e =
    let closure = SSet.fold
      (fun x acc ->
         if SMap.mem x env then
-          x::acc
+          (SMap.find x env)::acc
         else
           acc)
      freevars_of_e
@@ -71,7 +73,7 @@ let getClosure env e =
    let closureEnv = SSet.fold 
      (fun x acc -> 
         if SMap.mem x env 
-          then (incr i; SMap.add x (Vclos !i) acc)
+          then (incr i; SMap.add x (C.Vclos !i) acc)
           else acc)
      freevars_of_e
      SMap.empty
@@ -79,26 +81,26 @@ let getClosure env e =
 
 (** s is the number of items on the current frame 
  *  env is the environment minus the global environment *)
-let transforme env s = function
+let rec transforme env s = function
    | I.Thunk e ->
-       let (closure, closureEnv) = getClosureVars env e in
+       let (closure, closureEnv) = getClosure env e in
        let f = getClosureName () in
        let e' = transforme closureEnv 0 e in
-       globalDefs := (C.Letfun (f,e')) :: globalDefs;
+       globalDefs := (C.Letfun (f,e')) :: !globalDefs;
        C.Eclos (f, closure)
    | I.App (e1, e2) ->
-       let e1' = transforme env s in
-       let e2' = transforme env (s+1) in (* save register $a1 *)
-       Eapp (e1', e2')
+       let e1' = transforme env s e1 in
+       let e2' = transforme env (s+1) e2 in (* save register $a1 *)
+       C.Eapp (e1', e2')
    | I.Lambda (x,e) ->
-       let (closure, closureEnv) = getClosureVars env e in
+       let (closure, closureEnv) = getClosure env e in
        let f = getClosureName () in
        let funEnv = SMap.add x C.Varg closureEnv in
        let e' = transforme closureEnv 0 e in
-       globalDefs := (C.Letfun (f,e')) :: globalDefs;
+       globalDefs := (C.Letfun (f,e')) :: !globalDefs;
        C.Eclos (f, closure)
    | I.Neg e ->
-       C.Eneg (tranforme env s e)
+       C.Eneg (transforme env s e)
    | I.BinOp (e1,op,e2) ->
        let e1' = transforme env s e1 in
        let e2' = transforme env (s+1) e2 in (* save value of e1 *)
@@ -106,14 +108,14 @@ let transforme env s = function
    | I.Let (bs, e) ->
        let bindLoc = ref s in
        let env' = List.fold_left
-         (fun acc (x,_) -> incr bindLoc; SMap.add x (C.Vlocal !bindLoc))
+         (fun acc (x,_) -> incr bindLoc; SMap.add x (C.Vlocal !bindLoc) acc)
          env
          bs in
        let bindLoc = ref s in
        let bs' = List.map
-         (fun (x,e) -> incr bindLoc (bindLoc, transforme env !bindLoc e))
+         (fun (x,e) -> incr bindLoc; (!bindLoc, transforme env !bindLoc e))
          bs in
-       let e' = transforme env' (s + !bindNb) e in
+       let e' = transforme env' !bindLoc e in
        C.Elet (bs',e')
    | I.If (e1, e2, e3) ->
        let e1' = transforme env s e1 in
@@ -124,17 +126,17 @@ let transforme env s = function
        let e1' = transforme env s e1 in
        let e2' = transforme env s e2 in
        let env' = SMap.add i1 (C.Vlocal (s+1))
-                    (SMap.add id (C.Vlocal (s+2)) env) in
+                    (SMap.add i2 (C.Vlocal (s+2)) env) in
        let e3' = transforme env' (s+2) e3 in
        C.Ecase (e1', e2', (s+1), (s+2), e3')
    | I.Do es ->
-       C.Edo (List.map (fun e -> tranforme env s e))
+       C.Edo (List.map (fun e -> transforme env s e) es)
    | I.Return ->
        C.Ereturn
    | I.Id x ->
        C.Evar (
-         if Smap.mem x env then
-           Smap.find x env
+         if SMap.mem x env then
+           SMap.find x env
          else
            C.Vglobal x
        )
@@ -158,4 +160,5 @@ let transform f =
          (SMap.add "rem" (Vglobal "rem")
            (SMap.singleton "div" (Vglobal "div")))))
      f*)
-   (List.map (fun (x,e) -> C.Let (x, tranforme (SMap.empty)0 e))) @ !globalDefs
+   (List.map (fun (x,e) -> C.Let (x, transforme (SMap.empty)0 e)) f) 
+     @ !globalDefs

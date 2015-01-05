@@ -20,6 +20,7 @@ type expr =
   | Eneg of expr
   | EbinOp of expr * op * expr
   | Etrue
+  | Efalse
   | Eint of int
   | Echar of char
   | EemptyList

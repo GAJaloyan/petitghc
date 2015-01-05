@@ -1,5 +1,21 @@
-make;
+make
 
+echo "syntax/good"
+./petitghc --parse-only tests/syntax/good/testfile-comment-1.hs  
+./petitghc --parse-only tests/syntax/good/testfile-semicolon-1.hs  
+./petitghc --parse-only tests/syntax/good/testfile-semicolon-2.hs  
+./petitghc --parse-only tests/syntax/good/testfile-semicolon-3.hs
+
+echo "syntax/bad"
+./petitghc --parse-only tests/syntax/bad/testfile-character_literal-1.hs  
+./petitghc --parse-only tests/syntax/bad/testfile-lambda-1.hs   
+./petitghc --parse-only tests/syntax/bad/testfile-string_literal-1.hs  
+./petitghc --parse-only tests/syntax/bad/testfile-string_literal-3.hs
+./petitghc --parse-only tests/syntax/bad/testfile-do-1.hs                 
+./petitghc --parse-only tests/syntax/bad/testfile-lexical-1.hs  
+./petitghc --parse-only tests/syntax/bad/testfile-string_literal-2.hs
+
+echo "exec"
 ./petitghc tests/exec/append1.hs   
 ./petitghc tests/exec/church2.hs    
 ./petitghc tests/exec/cycle2.hs   
@@ -51,3 +67,13 @@ make;
 ./petitghc tests/exec/primes.hs    
 ./petitghc tests/exec/print_string.hs    
 ./petitghc tests/exec/shadowing1.hs
+
+echo "exec-fail"
+
+./petitghc tests/exec-fail/bool1.hs  
+./petitghc tests/exec-fail/division_by_zero.hs  
+./petitghc tests/exec-fail/error1.hs  
+./petitghc tests/exec-fail/error2.hs  
+./petitghc tests/exec-fail/error3.hs  
+./petitghc tests/exec-fail/lazy1.hs  
+./petitghc tests/exec-fail/shadowing1.hs
