@@ -294,5 +294,3 @@ val popn: int -> text
 
 val peek : register -> text
 (** [peek r] place le mot en sommet de pile dans [r] sans dépiler *)
-
-This document was generated using caml2html 

@@ -59,3 +59,10 @@ from the weakest to the strongest:
 <bindings>      ::= <def> | { <def>_;+;? }
 <op>            ::= + | - | * | <= | >= | > | < | /= | == | && | || | :
 <const>         ::= True | False | <int> | <caracter> | <chain>
+
+
+The file is compiled as follows: putChar, error, rem and div are
+always included in the object code. They are associated with 4
+variables, each one containing an empty closure to these functions.
+Next, the stack contains has many variables as there are global
+definitions.

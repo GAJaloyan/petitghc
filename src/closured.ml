@@ -27,6 +27,6 @@ type expr =
   
 and decl =
   | Let of string * expr
-  | Letfun of string * expr
+  | Letfun of string * expr * (* fpmax *) int
 
 type prog = decl list
