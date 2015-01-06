@@ -129,9 +129,9 @@ let compile_expr = function
      begin match v with
      | Vglobal x -> la v0 x
      | Vlocal i ->
-        lw v0 areg (n*4, fp)
+        lw v0 areg (i, fp)
      | Vclos n ->
-        lw v0 areg ((n+1)*4, a1)
+        lw v0 areg (n, a1)
      | Varg -> 
         move v0 a0 (* the current functions argument is in a0 *)
      end
@@ -144,20 +144,33 @@ let compile_expr = function
      sw t0 areg (4,v0) ++
      la t0 2 ++
      sw t0 areg (0,v0) ++
-     List.fold_left 
-       (function
-        | Vglobal x -> la v0 x
+     fst (
+       List.fold_left 
+       (fun (acc,posClos) v ->
+        (acc ++
+         (match v
+         | Vglobal x -> la t0 x
+         | Vlocal i  -> lw t0 areg (i, fp)
+         | Vclos n   -> lw t0 areg (n, a1)
+         | Varg      -> move t0 a0
+        ) ++ sw t0 areg (posClos v0)),
+        (posClos+4)
        )
-       vs
+       (nop,8)
+       vs) ++
      pop a0
  | C.Eapp (e1,e2) ->
      let code_e1 = compile_expr e1
      and code_e2 = compile_expr e2 in
+     push a0 ++
      code_e1 ++
-     move a1 v0 ++
+     move a0 v0 ++
+     jal force ++
+     move a1 a0 ++
      code_e2 ++
      move a0 v0 ++
-     lw t0 areg (0,a1) ++
+     jal force ++
+     lw t0 areg (4,a1) ++
      jalr t0
  | C.Ethunk e -> (* according to the preceding module, e will always
                     be a closure *)
@@ -167,7 +180,7 @@ let compile_expr = function
      li a0 8 ++
      li v0 9 ++
      syscall ++
-     sw t0 (4,v0) ++
+     sw t0 (4,v0)
  | C.Elet (bs,e) ->
      (List.fold_left
        (fun acc (i,e') ->
@@ -181,7 +194,7 @@ let compile_expr = function
      let code_e1 = compile_expr e1
      and code_e2 = compile_expr e2
      and code_e3 = compile_expr e3 in
-     let else_lab = nextElse () and endif_lab = nextEndIf () in
+     let else_lab = nextNbLabels () and endif_lab = nextNbLabels () in
      code_e1 ++
      lw t0 areg (4,v0) ++
      beqz t0 else_lab ++
@@ -198,15 +211,26 @@ let compile_expr = function
      jal force ++
      li t0 0 ++
      sub a0 t0 oreg a0
- | C.EbinOp (e1,o,e2) when o <> C.colon -> 
+ | C.EbinOp (e1,o,e2) when o <> C.Colon -> 
      let code_e1 = code_expr e1 in
      let code_e2 = code_expr e2 in
      push a0 ++
+     push a1 ++
      code_e1 ++
      move a0 v0 ++
      jal force ++
-     move a0 a1 ++
+     move a1 a0 ++ (* first argument in a1 *)
      code_e2 ++
+     move a0 v0 ++
+     jal force ++
+     move a0 a1 ++
+     (match o with
+     | C.Plus -> add | C.Minus -> sub | C.Time -> mul | C.LowerEq -> sle
+     | C.GreaterEq -> sge | C.Greater -> sgt | C.Lower -> slt 
+     | C.Unequal -> sne | C.Equal -> seq | C.And -> and_ | C.Or -> or_
+     | _ -> failwith "impossible"
+     ) v0 a1 a0 ++
+     pop a1 ++
      pop a0
  | C.Etrue ->
      li a0 8 ++
@@ -214,18 +238,16 @@ let compile_expr = function
      syscall ++
      li t0 1 ++
      sw t0 areg (4,v0) ++
-     li t0 3 ++
+     li t0 0 ++
      sw t0 areg (0,v0) ++
-     move a0 v0
  | C.Efalse ->
      li a0 8 ++
      li v0 9 ++
      syscall ++
      li t0 0 ++
      sw t0 areg (4,v0) ++
-     li t0 3 ++
+     li t0 0 ++
      sw t0 areg (0,v0) ++
-     move a0 v0
  | C.Eint n ->
      li a0 8 ++
      li v0 9 ++
@@ -234,16 +256,14 @@ let compile_expr = function
      sw t0 areg (4,v0) ++
      li t0 0 ++
      sw t0 areg (0,v0) ++
-     move a0 v0
  | C.Echar c ->
      li a0 8 ++
      li v0 9 ++
      syscall ++
-     "li $t0, 'c'" ++
+     li $t0 (Char.code c) ++
      sw t0 areg (4,v0) ++
      li t0 1 ++
      sw t0 areg (0,v0) ++
-     move a0 v0
  | C.EemptyList ->
      li a0 8 ++
      li v0 9 ++
@@ -252,11 +272,8 @@ let compile_expr = function
      sw t0 areg (4,v0) ++
      li t0 0 ++
      sw t0 areg (0,v0) ++
-     move a0 v0
 
-and compile_binop o e1 e2 = failwith "undefined"
-
-and compile_decl (codefun, codemain) = function
+and compile_decl (code,data) = function
  | C.Let (x,e) ->
      let code_e = compile_expr e in
      label x ++
@@ -267,8 +284,10 @@ and compile_decl (codefun, codemain) = function
      pop fp ++
      pop ra ++
      jr ra
- | C.Letfun (x,e) ->
+ | C.Letfun (x,e) -> (* x is the name of the function
+                        and e is the expression corresponding to it *)
      let code_e = compile_expr e in
+     code ++
      label x ++
      push ra ++
      push fp ++
@@ -276,7 +295,7 @@ and compile_decl (codefun, codemain) = function
      code_e ++
      pop fp ++
      pop ra ++
-     jr ra
+     jr ra, data
 
 let initNbLabel p =
    let regexLabel = Str.regex "^b[1-9][0-9]*$" in
@@ -291,18 +310,14 @@ let initNbLabel p =
 
 let compile_program p ofile =
    initNbLabel p; (* make sure we won't overwrite any of the function's label *)
+   let baseFuncCode,baseFuncData = baseFunctions () in
    let codefun, code = List.fold_left compile_decl (nop, nop) p in
    let p =
      { text =
-        baseFunctions ++
+        baseFuncCode ++
         codefun
        data =
-        label "div" ++
-        dword [2] ++
-        address ["fun2"] ++
-        label "rem" ++
-        dword [2] ++
-        address ["fun4"]
+        baseFuncData
      }
    in
    let f = open_out ofile in
