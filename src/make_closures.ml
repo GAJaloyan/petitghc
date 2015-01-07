@@ -89,7 +89,7 @@ let rec transforme env next = function
        let f = getClosureName () in
        let (e',fpmax) = transforme closureEnv 0 e in
        globalDefs := (C.Letfun (f,e',fpmax)) :: !globalDefs;
-       C.Ethunk (C.Eclos (f, closure), next)
+       C.Ethunk (C.Eclos (f, closure)), next
    | I.App (e1, e2) ->
        let e1', fpmax' = transforme env next e1 in
        let e2', fpmax2 = transforme env (max fpmax' next) e2 in
@@ -180,5 +180,7 @@ let transform f =
      f in
    (List.map (fun (x,e) -> 
            let (e,fpmax) = transforme (SMap.empty) 0 e in
-           C.Let (x,e)) f) 
+           let funname = getClosureName () in
+           globalDefs := (C.Letfun (funname, e, fpmax)) :: !globalDefs;
+           C.Let (x,funname)) f) 
      @ !globalDefs

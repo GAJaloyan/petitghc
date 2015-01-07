@@ -101,6 +101,7 @@ let bgtz x (z : label) = ins "bgtz %s, %s" x z
 let blez x (z : label) = ins "blez %s, %s" x z
 let bltz x (z : label) = ins "bltz %s, %s" x z
 
+let j l = ins "j %s" l
 let jr a = ins "jr %s" a
 let jal (z : label) = ins "jal %s" z
 let jalr (z : register) = ins "jalr %s" z
@@ -137,6 +138,8 @@ let pop r =
 
 let popn n =
   add sp sp oi n
+
+let pushn n = sub sp sp oi n
 
 type program = {
   text : [ `text ] asm;

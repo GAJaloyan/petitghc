@@ -200,7 +200,8 @@ val blez : register ->  label -> text
 val bltz : register ->  label -> text
 (** [bopz ra rb label] branche vers le label [label] si [ra op 0] *)
 
-
+val j : label -> text
+(** [jr r] Continue l'exécution à l'adresse spécifiée dans le label [l] *)
 val jr : register -> text
 (** [jr r] Continue l'exécution à l'adresse spécifiée dans le registre
     [r] *)
@@ -291,6 +292,9 @@ val pop : register -> text
 
 val popn: int -> text
 (** [popn n] dépile [n] octets *)
+
+val pushn: int -> text
+(** [popn n] alloue [n] octets *)
 
 val peek : register -> text
 (** [peek r] place le mot en sommet de pile dans [r] sans dépiler *)
