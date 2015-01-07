@@ -37,9 +37,9 @@
 %nonassoc Else
 %left Or
 %left And
+%nonassoc Greater GreaterEq Lower LowerEq Unequal Equal
 %left Plus Minus
 %right Colon
-%nonassoc Greater GreaterEq Lower LowerEq Unequal Equal
 %left Time
 %nonassoc neg
 

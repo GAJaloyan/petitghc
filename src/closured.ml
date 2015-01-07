@@ -109,13 +109,13 @@ let rec print_expr d = function
        print_space d;
        Printf.printf ")\n"
   | EbinOp (e1,o,e2) ->
-       print_space d; Printf.printf "EbinOp\n";
+       print_space d; Printf.printf "EbinOp(\n";
        print_expr (d+1) e1; print_space d; Printf.printf ",\n";
        print_space d; Printf.printf "%s\n" (string_of_op o);
        print_expr (d+1) e2; print_space d; Printf.printf ")\n"
   | Etrue -> print_space d; Printf.printf "Etrue"
   | Efalse -> print_space d; Printf.printf "Efalse"
-  | Eint i -> print_space d; Printf.printf "Eint(%d)\n" d
+  | Eint i -> print_space d; Printf.printf "Eint(%d)\n" i
   | Echar c -> print_space d; Printf.printf "Echar(%c)\n" c
   | EemptyList -> print_space d; Printf.printf "EemptyList\n"
 

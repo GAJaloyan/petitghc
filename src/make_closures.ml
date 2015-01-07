@@ -52,10 +52,10 @@ let closureNb = ref 0
 (* returns the next closure name available *)
 let getClosureName () = 
    incr closureNb;
-   let name = ref ("fun" ^ (string_of_int !closureNb)) in
+   let name = ref ("_fun" ^ (string_of_int !closureNb)) in
    while SSet.mem !name !globalNames do
      incr closureNb;
-     name := ("fun" ^ (string_of_int !closureNb))
+     name := ("_fun" ^ (string_of_int !closureNb))
    done;
    globalNames := SSet.add !name !globalNames;
    !name
@@ -182,5 +182,5 @@ let transform f =
            let (e,fpmax) = transforme (SMap.empty) 0 e in
            let funname = getClosureName () in
            globalDefs := (C.Letfun (funname, e, fpmax)) :: !globalDefs;
-           C.Let (x,funname)) f) 
+           C.Let ((if x = "main" then "_main" else x),funname)) f) 
      @ !globalDefs
