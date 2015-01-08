@@ -15,7 +15,7 @@ let force = "_force"
 
 let forceGen () =
    (* force forces the evaluation of the value
-    * contained inside a1 *)
+    * contained inside a0 *)
    let force_1 = "_force_1" and force_2 = "_force_2" in
    comment "start force" ++
    label force ++
@@ -159,12 +159,17 @@ let rec compile_expr = function
      | C.Varg -> 
         move v0 a0 (* the current functions argument is in a0 *)
      end
+
  | C.Eclos (f,vs) ->
      comment ("startclos" ^ f) ++
+
+     (* allocates the closure *)
      push a0 ++
      li a0 (4*(List.length vs)+8) ++
      li v0 9 ++
      syscall ++
+     pop a0 ++
+
      la t0 alab f ++
      sw t0 areg (4,v0) ++
      li t0 2 ++
@@ -173,40 +178,54 @@ let rec compile_expr = function
        List.fold_left 
        (fun (acc,posClos) v ->
         (acc ++
-         (match v with
-         | C.Vglobal x -> la t0 alab x
-         | C.Vlocal n  -> lw t0 areg (n, fp)
-         | C.Vclos n   -> lw t0 areg (n, a1)
+         (match v with 
+         | C.Vglobal x -> la t0 alab x 
+         | C.Vlocal n  -> lw t0 areg (n, fp) 
+         | C.Vclos n   -> lw t0 areg (n, a1) 
          | C.Varg      -> move t0 a0
         ) ++ sw t0 areg (posClos, v0)),
         (posClos+4)
        )
        (nop,8)
        vs) ++
-     pop a0 ++
      comment ("endClos" ^ f)
+
  | C.Eapp (e1,e2) ->
      (* should be good *)
      let code_e1 = compile_expr e1
      and code_e2 = compile_expr e2 in
      comment "start app" ++
      push ra ++
+     code_e1 ++
      push a0 ++
      push a1 ++
-     code_e1 ++
      move a0 v0 ++
      jal force ++
-     push a0 ++
-     code_e2 ++
-     move a0 v0 ++
-     jal force ++
-     pop a1 ++
-     lw t0 areg (4,a1) ++
-     jalr t0 ++
+     move t0 a0 ++
      pop a1 ++
      pop a0 ++
+     push t0 ++ (* closure on top of the stack *)
+
+     code_e2 ++
+     push a0 ++
+     push a1 ++
+     move a0 v0 ++
+     jal force ++
+     move t0 a0 ++ (* argument in t0 *)
+     pop a1 ++
+     pop a0 ++
+     pop t1 ++ (* closure in t1 *)
+     push a1 ++
+     push a0 ++
+     move a1 t1 ++
+     move a0 t0 ++
+     lw t0 areg (4,a1) ++
+     jalr t0 ++
+     pop a0 ++
+     pop a1 ++
      pop ra ++
      comment "end app"
+
  | C.Ethunk e -> (* according to the preceding module, e will always
                     be a closure *)
      (* should be good *)
@@ -223,7 +242,9 @@ let rec compile_expr = function
      sw t0 areg (0,v0) ++
      pop a0 ++
      comment "end thunk"
+
  | C.Elet (bs,e) ->
+     comment "begin let in" ++
      (List.fold_left
        (fun acc (i,e') ->
           acc ++
@@ -231,24 +252,69 @@ let rec compile_expr = function
           sw v0 areg (i,fp))
        nop
        bs) ++
-     compile_expr e
+     compile_expr e ++
+     comment "end let in"
+
  | C.Eif (e1,e2,e3) ->
      let code_e1 = compile_expr e1
      and code_e2 = compile_expr e2
      and code_e3 = compile_expr e3 in
      let else_lab = getNextLabel () and endif_lab = getNextLabel () in
+     comment "begin if" ++
      code_e1 ++
+     push ra ++
+     push a0 ++
+     push a1 ++
+     move a0 v0 ++
+     jal force ++
+     move v0 a0 ++
+     pop a1 ++
+     pop a0 ++
+     pop ra ++
      lw t0 areg (4,v0) ++
      beqz t0 else_lab ++
+     comment "begin then" ++
      code_e2 ++
      j endif_lab ++
+     comment "begin else" ++
      label else_lab ++
      code_e3 ++
      label endif_lab (* v0 already contains the good value *)
- | C.Ecase (e1,e2,i1,i2,e3) -> failwith "undefined"
+
+ | C.Ecase (e1,e2,i1,i2,e3) ->
+     let code_e1 = compile_expr e1 in
+     let code_e2 = compile_expr e2 in
+     let code_e3 = compile_expr e3 in
+     let case_branch2 = getNextLabel () in
+     let case_end = getNextLabel () in
+     comment "begin case" ++
+     code_e1 ++
+     push ra ++
+     push a1 ++
+     push a0 ++
+     move a0 v0 ++
+     jal force ++
+     move v0 a0 ++
+     pop a0 ++
+     pop a1 ++
+     pop ra ++
+     lw t0 areg (0,v0) ++ (* if the result is 0 (empty list *)
+     bnez t0 case_branch2 ++
+     code_e2 ++
+     j case_end ++
+     label case_branch2 ++
+     lw t0 areg (4,v0) ++ (* first element of cons *)
+     sw t0 areg (i1,fp) ++
+     lw t0 areg (8,v0) ++ (* second element of cons *)
+     sw t0 areg (i2,fp) ++
+     code_e3 ++
+     label case_end ++
+     comment case_end
+
  | C.Edo es ->
      let ces = List.map compile_expr es in
      List.fold_left (fun acc x -> acc ++ x) nop ces
+
  | C.Ereturn ->
      push a0 ++
      li a0 8 ++
@@ -259,17 +325,21 @@ let rec compile_expr = function
      li t0 0 ++
      sw t0 areg (0,v0) ++
      pop a0
+
  | C.Eneg e ->
+
      let code_e = compile_expr e in
      code_e ++
      move a0 v0 ++
      jal force ++
      li t0 0 ++
      sub v0 t0 oreg a0
- | C.EbinOp (e1,o,e2) when o <> C.Colon -> 
+
+ | C.EbinOp (e1,o,e2) -> 
      let code_e1 = compile_expr e1 in
      let code_e2 = compile_expr e2 in
 
+     comment "begin EbinOp" ++
      push ra ++
      code_e1 ++
      push a0 ++
@@ -290,34 +360,40 @@ let rec compile_expr = function
      pop a1 ++
      pop a0 ++
      push t0 ++ (* second operand on top of the stack *)
-
-     li a0 8 ++
-     li v0 9 ++
-     syscall ++
      
      pop t3 ++ (* second operand *)
      lw t2 areg (4,t3) ++
-     pop t3 ++
+     pop t3 ++ (* first operand *)
      lw t1 areg (4,t3) ++
 
-     (match o with
-     | C.Plus -> add t0 t1 oreg t2
-     | C.Minus -> sub t0 t1 oreg t2
-     | C.Time -> mul t0 t1 oreg t2
-     | C.LowerEq -> sle t0 t1 t2
-     | C.GreaterEq -> sge t0 t1 t2
-     | C.Greater -> sgt t0 t1 t2
-     | C.Lower -> slt t0 t1 t2
-     | C.Unequal -> sne t0 t1 t2
-     | C.Equal -> seq t0 t1 t2
-     | C.And -> and_  t0 t1 t2
-     | C.Or -> or_ t0 t1 t2
-     | _ -> failwith "impossible"
+     (let make_simple_val = 
+        sw t0 areg (4,v0) ++
+        li t0 0 ++
+        sw t0 areg (0,v0)
+      and alloc n = push a0 ++ li a0 n ++ li v0 9 ++
+                    syscall ++ pop a0 in
+     match o with
+     | C.Plus      -> alloc 8 ++ add t0 t1 oreg t2 ++ make_simple_val
+     | C.Minus     -> alloc 8 ++ sub t0 t1 oreg t2 ++ make_simple_val
+     | C.Time      -> alloc 8 ++ mul t0 t1 oreg t2 ++ make_simple_val
+     | C.LowerEq   -> alloc 8 ++ sle t0 t1 t2 ++ make_simple_val
+     | C.GreaterEq -> alloc 8 ++ sge t0 t1 t2 ++ make_simple_val
+     | C.Greater   -> alloc 8 ++ sgt t0 t1 t2 ++ make_simple_val
+     | C.Lower     -> alloc 8 ++ slt t0 t1 t2 ++ make_simple_val
+     | C.Unequal   -> alloc 8 ++ sne t0 t1 t2 ++ make_simple_val
+     | C.Equal     -> alloc 8 ++ seq t0 t1 t2 ++ make_simple_val
+     | C.And       -> alloc 8 ++ and_  t0 t1 t2 ++ make_simple_val
+     | C.Or        -> alloc 8 ++ or_ t0 t1 t2 ++ make_simple_val
+     | C.Colon     -> 
+           alloc 12 ++ 
+           sw t1 areg (4, v0) ++
+           sw t2 areg (8, v0) ++
+           li t0 1 ++
+           sw t0 areg (0, v0)
      ) ++
-     sw t0 areg (4,v0) ++
-     li t0 0 ++
-     sw t0 areg (0,v0) ++
-     pop ra
+     pop ra ++
+     comment "end EbinOp"
+
  | C.Etrue ->
      push a0 ++
      li a0 8 ++
@@ -328,6 +404,7 @@ let rec compile_expr = function
      li t0 0 ++
      sw t0 areg (0,v0) ++
      pop a0
+
  | C.Efalse ->
      push a0 ++
      li a0 8 ++
@@ -338,6 +415,7 @@ let rec compile_expr = function
      li t0 0 ++
      sw t0 areg (0,v0) ++
      pop a0
+
  | C.Eint n ->
      push a0 ++
      li a0 8 ++
@@ -348,6 +426,7 @@ let rec compile_expr = function
      li t0 0 ++
      sw t0 areg (0,v0) ++
      pop a0
+
  | C.Echar c ->
      push a0 ++
      li a0 8 ++
@@ -358,6 +437,7 @@ let rec compile_expr = function
      li t0 0 ++
      sw t0 areg (0,v0) ++
      pop a0
+
  | C.EemptyList ->
      push a0 ++
      li a0 8 ++
@@ -373,16 +453,13 @@ and compile_decl (code,data) = function
  | C.Let (x,fun_) ->
      code
      ,
-     (let closure = getNextLabel () in
-     data ++ (* the thunk associated with the let *)
+     (data ++ 
      label x ++
-     dword [3] ++
-     address [closure] ++
-     label closure ++ (* the closure associated with it *)
      dword [2] ++
      address [fun_])
+
  | C.Letfun (x,e,fpmax) -> (* x is the name of the function
-                        and e is the expression corresponding to it *)
+                              and e is the expression corresponding to it *)
      let code_e = compile_expr e in
      let pre, post = if fpmax > 0 then pushn fpmax, popn fpmax else nop, nop in
      code ++
@@ -408,7 +485,8 @@ let compile_program (p : C.decl list) ofile =
      { text =
         label "main" ++ (* in main, we just force the evaluation of "main" *)
         la a0 alab "_main" ++
-        jal force ++
+        lw t0 areg (4,a0) ++
+        jalr t0 ++
         li v0 17 ++ (* exits with exit code 0 *)
         li a0 0 ++
         syscall ++

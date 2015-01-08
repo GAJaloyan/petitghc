@@ -81,7 +81,7 @@ let getClosure env e =
      SMap.empty
    in (closure, closureEnv)
 
-(** s is the number of items on the current frame 
+(** next is the number of items on the current frame 
  *  env is the environment minus the global environment *)
 let rec transforme env next = function
    | I.Thunk e ->
@@ -95,9 +95,9 @@ let rec transforme env next = function
        let e2', fpmax2 = transforme env (max fpmax' next) e2 in
        C.Eapp (e1', e2'), next
    | I.Lambda (x,e) ->
-       let (closure, closureEnv) = getClosure env e in
+       let funEnv = SMap.add x C.Varg env in
+       let (closure, closureEnv) = getClosure funEnv e in
        let f = getClosureName () in
-       let funEnv = SMap.add x C.Varg closureEnv in
        let (e',fpmax) = transforme closureEnv 0 e in
        globalDefs := (C.Letfun (f,e',fpmax)) :: !globalDefs;
        C.Eclos (f, closure), next
@@ -111,19 +111,21 @@ let rec transforme env next = function
    | I.Let (bs, e) ->
        let bindLoc = ref next in
        let env' = List.fold_left
-         (fun acc (x,_) -> bindLoc := !bindLoc + 4; 
-                           SMap.add x (C.Vlocal (- !bindLoc)) acc)
+         (fun acc (x,_) -> 
+            let s = SMap.add x (C.Vlocal (- !bindLoc)) acc in
+            bindLoc := !bindLoc + 4;
+            s)
          env
          bs in
        let nextFree = !bindLoc in
        let bindLoc = ref next in
        let bs',fpmax1 = List.fold_left
          (fun (l,fpmax) (x,e) -> 
+             let e,fpmax' = transforme env' nextFree e in
              bindLoc := !bindLoc + 4; 
-             let e,fpmax' = transforme env nextFree e in
-             ((- !bindLoc, e)::l, max fpmax fpmax')
+             ((- (!bindLoc-4), e)::l, max fpmax fpmax')
          )
-         ([],next) bs in
+         ([],nextFree) bs in
        let e',fpmax2 = transforme env' nextFree e in
        C.Elet (bs',e'), max fpmax1 fpmax2
    | I.If (e1, e2, e3) ->
