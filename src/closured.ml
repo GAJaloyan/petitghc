@@ -32,7 +32,7 @@ type expr =
   | EemptyList
   
 and decl =
-  | Let of string * string (* as the only free variables in a global let
+  | Let of string * expr   (* as the only free variables in a global let
                               are globals, they don't need to be put
                               in the closure, so that the only thing
                               we need to know is the name of the closure *)
@@ -76,7 +76,7 @@ let rec print_expr d = function
        Printf.printf "Elet(\n";
        List.iter
          (fun (x,e) ->
-                 print_space (d+1); Printf.printf "%s,\n", x;
+                 print_space (d+1); Printf.printf "%d,\n" x;
                  print_expr (d+2) e;
                  print_space (d+1); Printf.printf ",\n")
          vs;
@@ -120,7 +120,10 @@ let rec print_expr d = function
   | EemptyList -> print_space d; Printf.printf "EemptyList\n"
 
 let print_decl = function
-  | Let(x,y) -> Printf.printf "Let(%s,%s)\n" x y
+  | Let(x,e) -> 
+      Printf.printf "Let(%s\n" x;
+      print_expr 0 e;
+      Printf.printf "\n"
   | Letfun(x,e,i) ->
       Printf.printf "Letfun(%s,\n" x;
       print_expr 0 e;

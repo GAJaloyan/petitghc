@@ -13,20 +13,32 @@ let ast_op_inter = function
    | Ast.Colon -> Inter.Colon
 
 let rec simpe = function
-   | Ast.Single se -> simpse se
-   | Ast.App (e1, e2,_) -> Inter.App (simpe e1, Inter.Thunk (simpse e2))
-   | Ast.Lambda (x,e) -> Inter.Lambda (x, simpe e)
+   | Ast.Single se -> 
+       simpse se
+   | Ast.App (e1, e2,_) -> 
+       Inter.App (simpe e1, Inter.Thunk (Inter.Lambda ("_",simpse e2)))
+   | Ast.Lambda (x,e) -> 
+       Inter.Lambda (x, simpe e)
    | Ast.Fun (xs,e) -> 
        List.fold_right (fun x acc -> Inter.Lambda (x,acc)) xs (simpe e)
-   | Ast.Neg (e,_) -> Inter.Neg (simpe e)
-   | Ast.BinOp (e1,o,e2,_) -> Inter.BinOp (simpe e1, ast_op_inter o, simpe e2)
-   | Ast.If (e1,e2,e3,_) -> Inter.If (simpe e1, simpe e2, simpe e3)
+   | Ast.Neg (e,_) -> 
+       Inter.Neg (simpe e)
+   | Ast.BinOp (e1,o,e2,_) -> 
+       Inter.BinOp (simpe e1, ast_op_inter o, simpe e2)
+   | Ast.If (e1,e2,e3,_) -> 
+       Inter.If (simpe e1, simpe e2, simpe e3)
    | Ast.Let ((bs,_), e,_) -> 
-       Inter.Let (List.map (fun (x,e,_) -> (x, Inter.Thunk (simpe e))) bs, simpe e)
+       Inter.Let 
+         (List.map 
+           (fun (x,e,_) -> (x, Inter.Thunk (Inter.Lambda ("_", simpe e)))) 
+           bs, 
+         simpe e)
    | Ast.Case (e1,e2,i1,i2,e3,_) ->
        Inter.Case (simpe e1, simpe e2, i1, i2, simpe e3)
-   | Ast.Do (es,_) -> Inter.Do (List.map simpe es)
-   | Ast.Return _ -> Inter.Return
+   | Ast.Do (es,_) -> 
+       Inter.Do (List.map simpe es)
+   | Ast.Return _ ->
+       Inter.Return
 
 and simpse = function
    | Ast.Par (e,_) -> simpe e
@@ -50,4 +62,5 @@ and simpc = function
        done;
        !rep
 
-let simplify f = List.map (fun (x,e,_) -> (x, simpe e)) f
+let simplify f = 
+   List.map (fun (x,e,_) -> (x, Inter.Thunk (Inter.Lambda ("_", simpe e)))) f

@@ -33,7 +33,7 @@ rule lexer = parse
 | '\n'                  { firstCol := true; newline lexbuf; lexer lexbuf }
 | empty+ as c           { firstCol := false; lexer lexbuf }
 | eof                   { Eof }
-| "--" [^'\n']* '\n'? as s { firstCol := true; lexer lexbuf }
+| "--" [^'\n']* '\n'?   { firstCol := true; lexer lexbuf }
 | "if"                  { firstCol := false; If }
 | "then"                { firstCol := false; Then }
 | "else"                { firstCol := false; Else }

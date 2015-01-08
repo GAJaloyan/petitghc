@@ -65,13 +65,13 @@ let getClosure env e =
    let closure = SSet.fold
      (fun x acc ->
         if SMap.mem x env then
-          (SMap.find x env)::acc
+            (SMap.find x env)::acc
         else
           acc)
      freevars_of_e
      [] in
    let i = ref 4 in (* in a closure, the first two entries are the function
-                       name and a type of value indication *)
+                       name and a type indication *)
    let closureEnv = SSet.fold 
      (fun x acc -> 
         if SMap.mem x env 
@@ -85,20 +85,19 @@ let getClosure env e =
  *  env is the environment minus the global environment *)
 let rec transforme env next = function
    | I.Thunk e ->
-       let (closure, closureEnv) = getClosure env e in
-       let f = getClosureName () in
-       let (e',fpmax) = transforme closureEnv 0 e in
-       globalDefs := (C.Letfun (f,e',fpmax)) :: !globalDefs;
-       C.Ethunk (C.Eclos (f, closure)), next
+       let e', fpmax = transforme env next e in
+       C.Ethunk e', max next fpmax
    | I.App (e1, e2) ->
        let e1', fpmax' = transforme env next e1 in
        let e2', fpmax2 = transforme env (max fpmax' next) e2 in
        C.Eapp (e1', e2'), next
    | I.Lambda (x,e) ->
-       let funEnv = SMap.add x C.Varg env in
-       let (closure, closureEnv) = getClosure funEnv e in
+       (* using I.Lambda is necessary so that x is not considered as
+        * a free variable *)
+       let (closure, closureEnv) = getClosure env (I.Lambda (x,e)) in
        let f = getClosureName () in
-       let (e',fpmax) = transforme closureEnv 0 e in
+       let funEnv = SMap.add x C.Varg closureEnv in
+       let (e',fpmax) = transforme funEnv 0 e in
        globalDefs := (C.Letfun (f,e',fpmax)) :: !globalDefs;
        C.Eclos (f, closure), next
    | I.Neg e ->
@@ -180,9 +179,11 @@ let transform f =
          (SMap.add "rem" (C.Vglobal "rem")
            (SMap.singleton "div" (C.Vglobal "div")))))
      f in
-   (List.map (fun (x,e) -> 
-           let (e,fpmax) = transforme (SMap.empty) 0 e in
-           let funname = getClosureName () in
-           globalDefs := (C.Letfun (funname, e, fpmax)) :: !globalDefs;
-           C.Let ((if x = "main" then "_main" else x),funname)) f) 
-     @ !globalDefs
+   (List.map 
+     (fun (x,e) -> 
+        let (e,fpmax) = transforme (SMap.empty) 0 e in
+        C.Let ((if x = "main" then "_main" else x), e)
+     ) 
+     f
+   ) 
+   @ !globalDefs

@@ -57,6 +57,7 @@ let putCharGen () =
    push ra ++
    push a0 ++
    push a1 ++
+   move a0 a2 ++
    jal force ++
    li v0 11 ++
    lw a0 areg (4, a0) ++
@@ -157,7 +158,7 @@ let rec compile_expr = function
      | C.Vclos n ->
         lw v0 areg (n, a1)
      | C.Varg -> 
-        move v0 a0 (* the current functions argument is in a0 *)
+        move v0 a2 (* the current functions argument is in a0 *)
      end
 
  | C.Eclos (f,vs) ->
@@ -182,7 +183,7 @@ let rec compile_expr = function
          | C.Vglobal x -> la t0 alab x 
          | C.Vlocal n  -> lw t0 areg (n, fp) 
          | C.Vclos n   -> lw t0 areg (n, a1) 
-         | C.Varg      -> move t0 a0
+         | C.Varg      -> move t0 a2
         ) ++ sw t0 areg (posClos, v0)),
         (posClos+4)
        )
@@ -215,14 +216,16 @@ let rec compile_expr = function
      pop a1 ++
      pop a0 ++
      pop t1 ++ (* closure in t1 *)
+     push a2 ++
      push a1 ++
      push a0 ++
      move a1 t1 ++
-     move a0 t0 ++
+     move a2 t0 ++
      lw t0 areg (4,a1) ++
      jalr t0 ++
      pop a0 ++
      pop a1 ++
+     pop a2 ++
      pop ra ++
      comment "end app"
 
@@ -313,7 +316,7 @@ let rec compile_expr = function
 
  | C.Edo es ->
      let ces = List.map compile_expr es in
-     List.fold_left (fun acc x -> acc ++ x) nop ces
+     List.fold_left (fun acc x -> x ++ acc) nop ces
 
  | C.Ereturn ->
      push a0 ++
@@ -450,13 +453,22 @@ let rec compile_expr = function
      pop a0
 
 and compile_decl (code,data) = function
- | C.Let (x,fun_) ->
-     code
+ | C.Let (x,e) ->
+     let thunkLab = getNextLabel () in
+     let funLab = getNextLabel () in
+     let code_e = compile_expr e in
+     code ++
+     label funLab ++
+     code_e ++
+     jr ra
      ,
-     (data ++ 
+     (data ++
      label x ++
+     dword [3] ++
+     address [thunkLab] ++
+     label thunkLab ++
      dword [2] ++
-     address [fun_])
+     address [funLab])
 
  | C.Letfun (x,e,fpmax) -> (* x is the name of the function
                               and e is the expression corresponding to it *)
@@ -485,8 +497,7 @@ let compile_program (p : C.decl list) ofile =
      { text =
         label "main" ++ (* in main, we just force the evaluation of "main" *)
         la a0 alab "_main" ++
-        lw t0 areg (4,a0) ++
-        jalr t0 ++
+        jal force ++
         li v0 17 ++ (* exits with exit code 0 *)
         li a0 0 ++
         syscall ++
