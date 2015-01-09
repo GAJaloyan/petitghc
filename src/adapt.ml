@@ -102,6 +102,7 @@ let rec adapter_sexpr (e:Typage.tsimple_expr) =
 
 and adapter_expr (e:Typage.texpr) = 
   match e.desc with
+  | Eatomiclist (({desc=SEexpr(exp);typ=_}:Typage.tsimple_expr)::[]) -> adapter_expr exp
   | Eatomiclist (l) ->
   begin
     match l with
