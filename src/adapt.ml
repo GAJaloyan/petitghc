@@ -1,6 +1,7 @@
 (* astract syntax tree for the language *)
 (*REM : les loc sont inutiles*)
 open Typage
+open Ast
 
 type ident = string
 
@@ -70,8 +71,8 @@ and bindings = definition list * loc
 
 type file = definition list
 
-let adapter_binop (b:Typage.tbinop) =
-  match b.tdescb with
+let adapter_binop (b:Ast.binop) =
+  match b.descb with
   |Add -> Plus
   |Sub -> Minus
   |Mul -> Time
@@ -85,7 +86,7 @@ let adapter_binop (b:Typage.tbinop) =
   |Or -> Or
   |Head -> Colon
 
-let adapter_const (c:Typage.tconst) =
+let adapter_const (c:Ast.const) =
   match c.desc with
   |Ctrue -> True(useless)
 	|Cfalse -> False(useless)
@@ -93,24 +94,25 @@ let adapter_const (c:Typage.tconst) =
 	|Cchar (c) -> Char(c, useless)
 	|Cstring (l) -> String (implode l, useless)
 
-let rec adapter_sexpr (e:Typage.tsimple_expr) =
+let rec adapter_sexpr (e:Ast.simple_expr) =
   match e.desc with
   | SEexpr(e) -> Par(adapter_expr e,useless)
   | SEident(s) -> Id(s, useless)
   | SEconst(c) -> Cst (adapter_const c, useless)
   | SEblock(l) -> List(List.map adapter_expr l,useless)
 
-and adapter_expr (e:Typage.texpr) = 
+and adapter_expr (e:Ast.expr) = 
   match e.desc with
-  | Eatomiclist (({desc=SEexpr(exp);typ=_}:Typage.tsimple_expr)::[]) -> adapter_expr exp
+  | Eatomiclist (({desc=SEexpr(exp);loc=_}:Ast.simple_expr)::[]) -> adapter_expr exp
   | Eatomiclist (l) ->
   begin
     match l with
      |a::[] -> Single (adapter_sexpr a)
+     |{desc=SEexpr(exp);loc=_}::b::[] -> App (adapter_expr exp,adapter_sexpr b,useless)
      |a::b::[] -> App (Single (adapter_sexpr a),adapter_sexpr b,useless)
      |_ -> failwith "will never happen"
   end
-  | Elambda(ll) -> let {formalslambda = a::[]; bodylambda = e}= ll.desc in Lambda (a, adapter_expr e)
+  | Elambda(ll) -> let {formalslambda = l; bodylambda = e}= ll.desc in Fun (l, adapter_expr e)
   | Ebinop (b, e1, e2) -> BinOp (adapter_expr e1, adapter_binop b, adapter_expr e2, useless)
   | Eif (e1, e2, e3) -> If(adapter_expr e1, adapter_expr e2, adapter_expr e3, useless)
   | Elet (tliste, e) -> Let((adapter_bindings tliste, useless), adapter_expr e, useless)
@@ -124,14 +126,14 @@ and adapter_bindings tliste =
   |a::b -> let {gauche = nom; formals = _; body = e} = a.desc in (nom, adapter_expr e, useless)::(adapter_bindings b)
 
 
-let rec adapter_prog (a:Typage.tdef0) = 
+let rec adapter_prog (a:Ast.def0) = 
   let {gauche0 = s; formals0 = sl; body0 = e} = a.desc in 
       match sl with
       |[] -> (s, adapter_expr e, (useless))
       |_ -> failwith "erreur d'interfacage 0x001"
 
-let adapter (a:Typage.tprogram) : file = 
-  ((List.fold_left (fun l e -> (adapter_prog e)::l) ([]) (a.desc.defs)))
+let adapter (a:Ast.program) : file = 
+  (List.rev (List.fold_left (fun l e -> (adapter_prog e)::l) ([]) (a.desc.defs)))
   
   
   

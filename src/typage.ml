@@ -404,7 +404,7 @@ and wexpr env (expr : Ast.expr) : texpr =
   --| Elambda of lambda
   --| Ebinop of binop * expr * expr Add | Sub | Mul | Infe | Supe | Infs | Sups | Uneq | Eq | And | Or | Head
   --| Eif of expr*expr*expr
-  | Elet of (def list)*(expr)
+  --| Elet of (def list)*(expr)
   --| Ecase of expr*expr*string*string*expr
   --| Edo of expr list
   --| Ereturn*)
