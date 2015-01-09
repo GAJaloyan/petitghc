@@ -97,79 +97,79 @@ spim -file outfile.s || exit 1
 echo "tests/exec/lazy6.hs" 
 ./petitghc tests/exec/lazy6.hs        
 spim -file outfile.s || exit 1
-# echo "tests/exec/mergesort1.hs" 
-# ./petitghc tests/exec/mergesort1.hs   
-# spim -file outfile.s || exit 1
+echo "tests/exec/mergesort1.hs" 
+./petitghc tests/exec/mergesort1.hs   
+spim -file outfile.s || exit 1
 # echo "tests/exec/pascal.hs" 
 # ./petitghc tests/exec/pascal.hs    
 # spim -file outfile.s || exit 1
-# echo "tests/exec/print_list1.hs" 
-# ./petitghc tests/exec/print_list1.hs     
-# spim -file outfile.s || exit 1
+echo "tests/exec/print_list1.hs" 
+./petitghc tests/exec/print_list1.hs     
+spim -file outfile.s || exit 1
 # echo "tests/exec/queue2.hs"
 # ./petitghc tests/exec/queue2.hs
 # spim -file outfile.s || exit 1
-# echo "tests/exec/call1.hs" 
-# ./petitghc tests/exec/call1.hs     
-# spim -file outfile.s || exit 1
-# echo "tests/exec/compose1.hs" 
-# ./petitghc tests/exec/compose1.hs   
-# spim -file outfile.s || exit 1
-# echo "tests/exec/cycle5.hs" 
-# ./petitghc tests/exec/cycle5.hs   
-# spim -file outfile.s || exit 1
-# echo "tests/exec/hello_world.hs" 
-# ./petitghc tests/exec/hello_world.hs   
-# spim -file outfile.s || exit 1
-# echo "tests/exec/lazy2.hs" 
-# ./petitghc tests/exec/lazy2.hs   
-# spim -file outfile.s || exit 1
-# echo "tests/exec/length1.hs" 
-# ./petitghc tests/exec/length1.hs      
-# spim -file outfile.s || exit 1
-# echo "tests/exec/mutual1.hs" 
-# ./petitghc tests/exec/mutual1.hs      
-# spim -file outfile.s || exit 1
-# echo "tests/exec/poly1.hs" 
-# ./petitghc tests/exec/poly1.hs     
-# spim -file outfile.s || exit 1
-# echo "tests/exec/print_string2.hs" 
-# ./petitghc tests/exec/print_string2.hs   
-# spim -file outfile.s || exit 1
-# echo "tests/exec/quicksort1.hs"
-# ./petitghc tests/exec/quicksort1.hs
-# spim -file outfile.s || exit 1
-# echo "tests/exec/call2.hs" 
-# ./petitghc tests/exec/call2.hs     
-# spim -file outfile.s || exit 1
-# echo "tests/exec/cycle1.hs" 
-# ./petitghc tests/exec/cycle1.hs     
-# spim -file outfile.s || exit 1
-# echo "tests/exec/fact1.hs" 
-# ./petitghc tests/exec/fact1.hs    
-# spim -file outfile.s || exit 1
-# echo "tests/exec/iter1.hs" 
-# ./petitghc tests/exec/iter1.hs         
-# spim -file outfile.s || exit 1
-# echo "tests/exec/lazy3.hs" 
-# ./petitghc tests/exec/lazy3.hs   
-# spim -file outfile.s || exit 1
-# echo "tests/exec/mandelbrot.hs" 
-# ./petitghc tests/exec/mandelbrot.hs   
-# spim -file outfile.s || exit 1
-# echo "tests/exec/mutual2.hs" 
-# ./petitghc tests/exec/mutual2.hs      
-# spim -file outfile.s || exit 1
-# echo "tests/exec/primes.hs" 
-# ./petitghc tests/exec/primes.hs    
-# spim -file outfile.s || exit 1
-# echo "tests/exec/print_string.hs" 
-# ./petitghc tests/exec/print_string.hs    
-# spim -file outfile.s || exit 1
-# echo "tests/exec/shadowing1.hs"
-# ./petitghc tests/exec/shadowing1.hs
-# spim -file outfile.s || exit 1
-# 
+echo "tests/exec/call1.hs" 
+./petitghc tests/exec/call1.hs     
+spim -file outfile.s || exit 1
+echo "tests/exec/compose1.hs" 
+./petitghc tests/exec/compose1.hs   
+spim -file outfile.s || exit 1
+echo "tests/exec/cycle5.hs" 
+./petitghc tests/exec/cycle5.hs   
+spim -file outfile.s || exit 1
+echo "tests/exec/hello_world.hs" 
+./petitghc tests/exec/hello_world.hs   
+spim -file outfile.s || exit 1
+echo "tests/exec/lazy2.hs" 
+./petitghc tests/exec/lazy2.hs   
+spim -file outfile.s || exit 1
+echo "tests/exec/length1.hs" 
+./petitghc tests/exec/length1.hs      
+spim -file outfile.s || exit 1
+echo "tests/exec/mutual1.hs" 
+./petitghc tests/exec/mutual1.hs      
+spim -file outfile.s || exit 1
+echo "tests/exec/poly1.hs" 
+./petitghc tests/exec/poly1.hs     
+spim -file outfile.s || exit 1
+echo "tests/exec/print_string2.hs" 
+./petitghc tests/exec/print_string2.hs   
+spim -file outfile.s || exit 1
+echo "tests/exec/quicksort1.hs"
+./petitghc tests/exec/quicksort1.hs
+spim -file outfile.s || exit 1
+echo "tests/exec/call2.hs" 
+./petitghc tests/exec/call2.hs     
+spim -file outfile.s || exit 1
+echo "tests/exec/cycle1.hs" 
+./petitghc tests/exec/cycle1.hs     
+spim -file outfile.s || exit 1
+echo "tests/exec/fact1.hs" 
+./petitghc tests/exec/fact1.hs    
+spim -file outfile.s || exit 1
+echo "tests/exec/iter1.hs" 
+./petitghc tests/exec/iter1.hs         
+spim -file outfile.s || exit 1
+echo "tests/exec/lazy3.hs" 
+./petitghc tests/exec/lazy3.hs   
+spim -file outfile.s || exit 1
+echo "tests/exec/mandelbrot.hs" 
+./petitghc tests/exec/mandelbrot.hs   
+spim -ldata 8000000 -file outfile.s || exit 1
+echo "tests/exec/mutual2.hs" 
+./petitghc tests/exec/mutual2.hs      
+spim -file outfile.s || exit 1
+echo "tests/exec/primes.hs" 
+./petitghc tests/exec/primes.hs    
+spim -file outfile.s || exit 1
+echo "tests/exec/print_string.hs" 
+./petitghc tests/exec/print_string.hs    
+spim -file outfile.s || exit 1
+echo "tests/exec/shadowing1.hs"
+./petitghc tests/exec/shadowing1.hs
+spim -file outfile.s || exit 1
+
 echo "exec-fail"
 
 #./petitghc tests/exec-fail/bool1.hs  
