@@ -1,148 +1,184 @@
+
+/* Analyseur syntaxique pour petit-Haskell */
+
 %{
-    module E = Error
-
-    (* transforms a list of application to the curried form *)
-    let list_to_app ((e::es) : Ast.simple_expr list) pos =
-        List.fold_left (fun rep e -> Ast.App(rep,e,pos)) (Ast.Single e) es
+  open Ast
+  
+  
+  let auxiliaire (a:Ast.simple_expr) (b:Ast.simple_expr) : Ast.simple_expr =
+      {desc=SEexpr({desc=Eatomiclist(a::b::[]);loc=a.loc}:Ast.expr);loc=a.loc}
+  
+  
+  let transformee (l:Ast.simple_expr list) = match l with
+    |[] -> []
+    |a::[] -> [a]
+    |a::b -> [List.fold_left (auxiliaire) (a) b]
     
-    let fun_to_lambda is e =
-        List.fold_right (fun x expr -> Ast.Lambda(x,expr)) is e
 %}
-%token Eof
-%token If Then Else
-%token Assign
-%token LeftCurly RightCurly LeftBracket RightBracket LeftPar RightPar
-%token Plus Minus Time
-%token Greater GreaterEq Lower LowerEq Unequal Equal
-%token And Or
-%token Colon
-%token Return
-%token Do
-%token Case
-%token Of
-%token True False
-%token Comma
-%token Lambda
-%token Arrow
-%token Semicolon
-%token Let
-%token In
-%token <int> Int
-%token <string> Ident
-%token <string> Ident0
-%token <char> Char
-%token <string> String
 
-%nonassoc In Lambda
-%nonassoc Else
-%left Or
-%left And
-%nonassoc Greater GreaterEq Lower LowerEq Unequal Equal
-%left Plus Minus
-%right Colon
-%left Time
-%nonassoc neg
+/* Déclaration des tokens */
 
-%start <Ast.file> file
+%token EOF
+%token <int> INTEGER
+%token <char> VCHAR
+%token <char list> VSTRING
+%token <string> IDENT0
+%token <string> IDENT1
+%token VTRUE VFALSE
+
+
+%token IN
+
+
+%token ELSE
+%nonassoc ELSE IN FLECHE
+
+%token IF LET CASE OF THEN RETURN DO
+
+%token FLECHE
+
+%token COMMA COLON
+%right COLON
+
+%token OUOU
+%left OUOU
+
+%token ETET
+%left ETET
+
+%token Smaller SmallerEqual Greater GreaterEqual EGAL NotEqual
+%left Smaller SmallerEqual Greater GreaterEqual EGAL NotEqual
+
+%token PVACC SEMICOLON
+
+
+%token PLUS MOINS
+%left PLUS MOINS
+
+%token MULT
+%left MULT
+
+%token BACKSLASH
+%token LPAR RPAR
+%token LBRA RBRA
+%token LCBR RCBR
+
+
+/* Point d'entrée de la grammaire */
+%start fichier
+%type <Ast.program> fichier
+%type <Ast.def0> def0
+%type <Ast.def> def
+%type <Ast.const> const
+%type <Ast.simple_expr> simple_expr
+%type <Ast.def list> liaisons
+%type <Ast.expr> expr
+
 %%
 
-file:
-    | Eof { [] }
-    | d = def0; ds = file { d :: ds }
+fichier:
+	|d = def0* EOF{ {desc = { defs = d} ; loc = $startpos} }
+;
 
 def0:
-    | i = Ident0; is = identList; e = expression { 
-        if is = [] then (i,e,($startpos,$endpos)) 
-        else ((*i, fun_to_lambda is e,($startpos,$endpos)*)
-              (i,Ast.Fun (is,e),($startpos,$endpos)))}
-    
+  
+	|i0 = IDENT0 i1 = IDENT1+ EGAL e = expr 
+	{  
+	  {desc = 
+	    {gauche0 = i0; formals0 = []; body0 =
+	        ({desc=Elambda({desc=({formalslambda=i1;bodylambda=e}:Ast.lambdad);loc=$startpos}:Ast.lambda);loc=$startpos}:Ast.expr) 
+	    } 
+	  ; loc = $startpos}  
+	}
+	|i0 = IDENT0 EGAL e = expr
+	{
+	  {desc=
+	    {gauche0=i0;formals0=[];body0=
+	      (e:Ast.expr)
+	    };
+	  loc=$startpos}
+	}
+;
+
 def:
-    | i = Ident; is = identList; e = expression { 
-        if is = [] then (i,e,($startpos,$endpos)) 
-        else ((*i, fun_to_lambda is e,($startpos,$endpos)*)
-              (i,Ast.Fun (is,e),($startpos,$endpos)))}
+	|i0 = IDENT1 i1 = IDENT1+ EGAL e = expr 
+	{  
+	  {desc = 
+	    {gauche = i0; formals = []; body =
+	        ({desc=Elambda({desc=({formalslambda=i1;bodylambda=e}:Ast.lambdad);loc=$startpos}:Ast.lambda);loc=$startpos}:Ast.expr) 
+	    }; 
+	  loc = $startpos}  
+	}
+	|i0 = IDENT1 EGAL e = expr
+	{
+	  {desc=
+	    {gauche=i0;formals=[];body=
+	      (e:Ast.expr)
+	    };
+	  loc=$startpos}
+	}
+;
 
-simple_expr:
-    | LeftPar; e = expression; RightPar { Ast.Par (e,($startpos,$endpos)) }
-    | i = Ident                       { Ast.Id (i,($startpos,$endpos)) }
-    | c = const                       { Ast.Cst (c,($startpos,$endpos))}
-    | LeftBracket; l = eList           { Ast.List (l,($startpos,$endpos)) }
 
-list_simple_expr:
-    | s = simple_expr; l = list_simple_expr { s :: l }
-    | s = simple_expr { [s] }
-
-eList:
-    | e = expression; Comma; l = eList { e :: l }
-    | e = expression; RightBracket      { [e] }
-    | RightBracket                      { [] }
-
-expression:
-    | es = list_simple_expr { list_to_app es ($startpos,$endpos) }
-    | Lambda; s = param; e = expression 
-        { (*List.fold_right (fun i e -> Ast.Lambda (i,e)) s e*)
-          Ast.Fun (s,e) }
-    | Minus; e = expression { Ast.Neg (e,($startpos,$endpos)) } %prec neg
-    | e1 = expression; Plus; e2 = expression 
-        { Ast.BinOp (e1,Ast.Plus,e2,($startpos,$endpos)) }
-    | e1 = expression; Minus; e2 = expression 
-        { Ast.BinOp (e1,Ast.Minus,e2,($startpos,$endpos)) }
-    | e1 = expression; Time; e2 = expression 
-        { Ast.BinOp (e1,Ast.Time,e2,($startpos,$endpos)) }
-    | e1 = expression; Greater; e2 = expression 
-        { Ast.BinOp (e1,Ast.Greater,e2,($startpos,$endpos)) }
-    | e1 = expression; GreaterEq; e2 = expression 
-        { Ast.BinOp (e1,Ast.GreaterEq,e2,($startpos,$endpos)) }
-    | e1 = expression; Lower; e2 = expression 
-        { Ast.BinOp (e1,Ast.Lower,e2,($startpos,$endpos)) }
-    | e1 = expression; LowerEq; e2 = expression 
-        { Ast.BinOp (e1,Ast.LowerEq,e2,($startpos,$endpos)) }
-    | e1 = expression; Unequal; e2 = expression 
-        { Ast.BinOp (e1,Ast.Unequal,e2,($startpos,$endpos)) }
-    | e1 = expression; Equal; e2 = expression 
-        { Ast.BinOp (e1,Ast.Equal,e2,($startpos,$endpos)) }
-    | e1 = expression; Colon; e2 = expression 
-        { Ast.BinOp (e1,Ast.Colon,e2,($startpos,$endpos)) }
-    | e1 = expression; Or; e2 = expression 
-        { Ast.BinOp (e1,Ast.Or,e2,($startpos,$endpos)) }
-    | e1 = expression; And; e2 = expression 
-        { Ast.BinOp (e1,Ast.And,e2,($startpos,$endpos)) }
-    | If e1 = expression; Then; e2 = expression; Else; e3 = expression 
-        { Ast.If (e1,e2,e3,($startpos,$endpos)) }
-    | Let; b = bindings; In; e = expression 
-        { Ast.Let (b,e,($startpos,$endpos)) }
-    | Case e1 = expression Of LeftCurly 
-        LeftBracket RightBracket Arrow e2 = expression Semicolon 
-        i = Ident Colon is = Ident Arrow e3 = expression Semicolon? RightCurly 
-        { Ast.Case (e1,e2,i,is,e3,($startpos,$endpos)) }
-    | Do LeftCurly l = toDo 
-        { Ast.Do (l,($startpos,$endpos)) }
-    | Return LeftPar RightPar 
-        { Ast.Return ($startpos,$endpos) }
-
-toDo:
-    | d = expression; Semicolon; l = toDo { d :: l }
-    | d = expression; Semicolon? RightCurly { d::[] }
-
-identList:
-    | i = Ident; l = identList { i :: l }
-    | Assign { [] }
-
-param:
-    | i = Ident; p = param { i :: p }
-    | i = Ident; Arrow { [i] }
-
-bindings:
-    | d = def { ([d],($startpos,$endpos)) }
-    | LeftCurly; l = listBindings { (l,($startpos,$endpos)) }
-
-listBindings:
-    | d = def; Semicolon; l = listBindings { d :: l }
-    | d = def; Semicolon? RightCurly { [d] }
 
 const:
-    | True          { Ast.True ($startpos,$endpos)    }
-    | False         { Ast.False ($startpos,$endpos)    }
-    | n = Int       { Ast.Int (n,($startpos,$endpos))      }
-    | c = Char      { Ast.Char (c,($startpos,$endpos))    }
-    | s = String    { Ast.String (s,($startpos,$endpos))   }
+	|VTRUE { {desc = Ctrue ; loc = $startpos}  }
+	|VFALSE { {desc = Cfalse ; loc = $startpos}  }
+	|i = INTEGER { {desc = Cint (i) ; loc = $startpos}  }
+	|c= VCHAR { {desc = Cchar (c) ; loc = $startpos}  }
+	|s = VSTRING { {desc = Cstring (s) ; loc = $startpos}  }
+;
+
+simple_expr:
+	|LPAR e1 = expr RPAR { {desc = SEexpr (e1) ; loc = $startpos}  }
+	|s1 = IDENT1 { {desc = SEident (s1) ; loc = $startpos}  }
+	|c = const { {desc = SEconst (c) ; loc = $startpos}  }
+	|LBRA e1 = separated_list (COMMA,expr) RBRA { {desc = SEblock (e1) ; loc = $startpos}  }
+;
+
+%inline op:
+	|PLUS { {descb = Add ; loc = $startpos} }
+	|MOINS{ {descb = Sub ; loc = $startpos} }
+	|MULT { {descb = Mul ; loc = $startpos} }
+	|SmallerEqual { {descb = Infe ; loc = $startpos} }
+	|GreaterEqual { {descb = Supe ; loc = $startpos} }
+	|Smaller { {descb = Infs ; loc = $startpos} }
+	|Greater { {descb = Sups ; loc = $startpos} }
+	|NotEqual { {descb = Uneq ; loc = $startpos} }
+	|EGAL EGAL { {descb = Eq ; loc = $startpos} }
+	|ETET { {descb = And ; loc = $startpos} }
+	|OUOU { {descb = Or ; loc = $startpos} }
+	|COLON { {descb = Head ; loc = $startpos} }
+;
+
+liaisons:
+	|d=def {[d]}
+	|LCBR e = separated_nonempty_list(SEMICOLON, def) PVACC {e}
+	|LCBR e = separated_nonempty_list(SEMICOLON, def) RCBR {e}
+;
+
+expr:
+	|e1 = expr ope=op e2=expr { {desc = Ebinop(ope, e1, e2); loc = $startpos} }
+	|MOINS e1 = expr 
+	{ 
+	  {desc = Ebinop ({descb = Sub ; loc = $startpos}, 
+	                  {desc = Eatomiclist [{desc = SEconst {desc = (Cint 0) ; loc = $startpos} ; loc = $startpos}]; loc = $startpos}, 
+	                  e1); 
+	  loc = $startpos} 
+	}
+	
+	|s = simple_expr+ { {desc = Eatomiclist (transformee(s)); loc = $startpos} }
+	|BACKSLASH i = nonempty_list(IDENT1) FLECHE e = expr { {desc = Elambda {desc = {formalslambda = i; bodylambda = e}; loc = $startpos} ; loc = $startpos} }
+	|IF e1 = expr THEN e2 = expr ELSE e3=expr { {desc = Eif(e1, e2, e3); loc = $startpos} }
+	|LET l = liaisons IN e = expr { {desc = Elet(l,e); loc = $startpos} }
+	
+	|CASE e= expr OF LCBR LBRA RBRA FLECHE e1 = expr SEMICOLON i1 = IDENT1 COLON i2 = IDENT1 FLECHE e2 = expr RCBR { {desc = Ecase(e,e1,i1,i2,e2); loc = $startpos} }
+	|CASE e= expr OF LCBR LBRA RBRA FLECHE e1 = expr SEMICOLON i1 = IDENT1 COLON i2 = IDENT1 FLECHE e2 = expr PVACC { {desc = Ecase(e,e1,i1,i2,e2); loc = $startpos} }
+	
+	|DO e = delimited(LCBR,separated_nonempty_list(SEMICOLON, expr),RCBR) { {desc = Edo(e); loc = $startpos} }
+	|DO e = delimited(LCBR,separated_nonempty_list(SEMICOLON, expr),PVACC) { {desc = Edo(e); loc = $startpos} }
+	
+	|RETURN LPAR RPAR { {desc = Ereturn; loc = $startpos} }
+	
+;
+

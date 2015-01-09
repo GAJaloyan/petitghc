@@ -12,6 +12,6 @@
 -- to_string n = n (\x -> 'S' : x) ['0']
 -- 
 -- print_nat n = print_string (to_string n)
-
-main = if (div 2 0) == 0 then putChar 't' else putChar 'f'
+test = 'v'
+main = if (div 2 0) == 0 then putChar test else putChar 'f'
 -- main = return ()

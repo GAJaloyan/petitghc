@@ -1,93 +1,113 @@
 {
-    exception LexingError
 
-    open Parser
+  open Lexing
+  open Format
+  open Parser
+  exception Lexing_error of string
+let kwd_tbl =
+[
+  "else", ELSE;
+  "if", IF;
+  "in", IN;
+  "let", LET;
+  "case", CASE;
+  "of", OF;
+  "then", THEN;
+  "return", RETURN;
+  "do", DO;
+  
+]
 
-    module E = Error 
+let identnum = ref 0
+	
 
-    let char_of_car s =
-        if String.length s = 1 then s.[0]
-        else match s.[1] with
-        | 'n'  -> '\n'
-        | 't'  -> '\t'
-        | '"'  -> '"'
-        | '\\' -> '\\'
-        | _    -> raise LexingError
-
-    let newline lexbuf =
-        let pos = lexbuf.Lexing.lex_curr_p in
-        lexbuf.Lexing.lex_curr_p <-
-            { pos with Lexing.pos_lnum = pos.Lexing.pos_lnum + 1; Lexing.pos_bol = pos.Lexing.pos_cnum }
-
-    let firstCol = ref true
+let id_or_kwd s = try List.assoc s kwd_tbl with _ -> begin (if(!identnum = 0) then IDENT0 s else IDENT1 s ) end
+  
+  let newline lexbuf =
+    let pos = lexbuf.lex_curr_p in begin 
+    lexbuf.lex_curr_p <-
+      { pos with pos_lnum = pos.pos_lnum + 1; pos_bol = pos.pos_cnum } end
 }
 
-let digit = ['0'-'9']
-let car   = ['\032'-'\033' '\035'-'\091' '\093'-'\126'] 
-let carEsc = car | "\\\\" | "\\\"" | "\\n" | "\\t"
-let empty = ['\t' ' ']
-let lower = ['a'-'z']
+
+let chiffre = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
+let ident = ['a'-'z'] (alpha | '_' | '\'' | chiffre)*
 
-rule lexer = parse
-| '\n'                  { firstCol := true; newline lexbuf; lexer lexbuf }
-| empty+ as c           { firstCol := false; lexer lexbuf }
-| eof                   { Eof }
-| "--" [^'\n']* '\n'?   { firstCol := true; lexer lexbuf }
-| "if"                  { firstCol := false; If }
-| "then"                { firstCol := false; Then }
-| "else"                { firstCol := false; Else }
-| "{"                   { firstCol := false; LeftCurly }
-| "}"                   { firstCol := false; RightCurly }
-| "["                   { firstCol := false; LeftBracket }
-| "]"                   { firstCol := false; RightBracket }
-| "("                   { firstCol := false; LeftPar }
-| ")"                   { firstCol := false; RightPar }
-| "+"                   { firstCol := false; Plus }
-| "-"                   { firstCol := false; Minus }
-| "*"                   { firstCol := false; Time }
-| ">"                   { firstCol := false; Greater }
-| ">="                  { firstCol := false; GreaterEq }
-| "<"                   { firstCol := false; Lower }
-| "<="                  { firstCol := false; LowerEq }
-| "/="                  { firstCol := false; Unequal }
-| "=="                  { firstCol := false; Equal }
-| "&&"                  { firstCol := false; And }
-| "||"                  { firstCol := false; Or }
-| ":"                   { firstCol := false; Colon }
-| "="                   { firstCol := false; Assign }
-| "return"              { firstCol := false; Return }
-| "do"                  { firstCol := false; Do }
-| "case"                { firstCol := false; Case }
-| "of"                  { firstCol := false; Of }
-| "True"                { firstCol := false; True }
-| "False"               { firstCol := false; False }
-| ","                   { firstCol := false; Comma }
-| "\\"                  { firstCol := false; Lambda }
-| "->"                  { firstCol := false; Arrow }
-| ";"                   { firstCol := false; Semicolon }
-| "let"                 { firstCol := false; Let }
-| "in"                  { firstCol := false; In }
-| digit+ as inum        { firstCol := false; Int (int_of_string inum) }
-| '\'' (carEsc as c) '\''  { firstCol := false; Char (char_of_car c) }
-| '"'                   { firstCol := false;
-                          read_string (Buffer.create 17) lexbuf }
-| (lower (alpha | '_' | '\'' | digit)*) as id 
-                        { 
-                          if !firstCol
-                          then begin
-                              firstCol := false;
-                              Ident0 id
-                          end
-                          else Ident id }
-| _                     { raise LexingError }
+let entier = ['0'-'9']+
+let car = [' '-'!' '#'-'[' ']'-'~'] | "\\\\" | "\\\"" | "\\n" | "\\t"
+let carno = [' '-'!' '#'-'[' ']'-'~']
+let caractere = '\'' car '\''
+let chaine = '\"' (car)* '\"'
 
-and read_string buf = parse
-| '"'       { String (Buffer.contents buf) }
-| '\\' '\\' { Buffer.add_char buf '\\'; read_string buf lexbuf }
-| '\\' 'n'  { Buffer.add_char buf '\n'; read_string buf lexbuf }
-| '\\' 't'  { Buffer.add_char buf '\t'; read_string buf lexbuf }
-| '\\' '"'  { Buffer.add_char buf '"'; read_string buf lexbuf }
-| car as c  { Buffer.add_string buf (Lexing.lexeme lexbuf); read_string buf lexbuf }
-| eof       { raise (E.SyntaxError "String is not terminated") }
-| _ as c    { raise (E.SyntaxError "Illegal character in string") }
+rule token = parse
+	|'\n'
+      { identnum := 0; new_line lexbuf; token lexbuf }
+  | [' ' '\t']+
+      { identnum := 1;  token lexbuf }
+  | "--"  [^'\n']* ('\n'|eof) { identnum := 0; new_line lexbuf; token lexbuf }
+  
+  | ident as id {let s = id_or_kwd id in begin identnum := 1; s end}
+  | entier as integ {identnum := 1; INTEGER  (int_of_string integ)}
+  | "True" {identnum := 1; VTRUE}
+  | "False" {identnum := 1; VFALSE}
+  | '\'' {identnum:=1; read_carac lexbuf}
+  | '"' {identnum:=1; let s = read_string lexbuf in VSTRING (s)}
+  
+  | ';' {identnum := 1; try read_pv lexbuf with _ -> SEMICOLON}
+  
+  | "{" {identnum := 1; LCBR}
+  | "}" {identnum := 1; RCBR}
+  | "->" {identnum := 1;FLECHE}
+  | '[' {identnum := 1;LBRA}
+  | ']' {identnum := 1;RBRA}
+  | '(' {identnum := 1;LPAR}
+  | ')' {identnum := 1;RPAR}
+  | '=' {identnum := 1;EGAL}
+  | '\\' {identnum := 1;BACKSLASH}
+  | '+' {identnum := 1; PLUS}
+  | '-' {identnum := 1; MOINS}
+  | '*' {identnum := 1; MULT}
+  | "<=" {identnum := 1; SmallerEqual}
+  | ">=" {identnum := 1; GreaterEqual}
+  | "/=" {identnum := 1; NotEqual}
+  | ">" {identnum := 1; Greater}
+  | "<" {identnum := 1; Smaller}
+  | ',' {identnum := 1; COMMA}
+  | ':' {identnum := 1; COLON}
+  | "&&" {identnum := 1; ETET}
+  | "||" {identnum := 1; OUOU}
+  | eof {EOF}
+  | _ { raise (Lexing_error "Pattern not found") }
+and read_pv = parse
+  | "--"  [^'\n']* ('\n') { new_line lexbuf; read_pv lexbuf}
+  |'\n'
+      { identnum := 1; new_line lexbuf; read_pv lexbuf }
+  | [' ' '\t']+
+      { identnum := 1; read_pv lexbuf }
+  | '}' {PVACC}
+
+and read_carac = parse
+  |carno as c {read_endcarac lexbuf; VCHAR (c)}  
+  | "\\t" {read_endcarac lexbuf; VCHAR ('\t')}
+  | "\\\\" {read_endcarac lexbuf; VCHAR ('\\')}
+  | "\\\"" {read_endcarac lexbuf; VCHAR ('\"')}
+  | "\\n" {read_endcarac lexbuf; VCHAR ('\n')}
+  |eof {raise (Lexing_error "Caractere ouvert non fermé") }
+  | _ {raise (Lexing_error "Caractere illégal") }
+
+and read_endcarac = parse
+	|'\'' {}
+	|_ {raise (Lexing_error "Caractere ouvert mais non fermé") }
+	
+and read_string = parse
+  |'"' {[]}
+  |carno as c {c::(read_string lexbuf)}
+  |"\\t" {'\t'::(read_string lexbuf)}
+  |"\\\\" {'\\'::(read_string lexbuf)}
+  |"\\\"" {'\"'::(read_string lexbuf)}
+  |"\\n" {'\n'::(read_string lexbuf)}
+  | eof {raise (Lexing_error "Chaine ouverte mais non fermée") }
+  | _ {raise (Lexing_error "Caractere illégal dans la chaine") }
+  
+
