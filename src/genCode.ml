@@ -156,11 +156,9 @@ let opGen op () =
       pop a1 ++
       pop a0 ++
       pop ra ++
-      lw t1 areg (4,t1) ++
-      lw t0 areg (4,t0) ++
       beqz t1 error_branch ++
-      (match op with "div" -> div 
-                   | "rem" -> rem
+      (match op with "_div" -> div 
+                   | "_rem" -> rem
                    | _ -> failwith "impossible case") t0 t0 oreg t1 ++
       li v0 9 ++
       li a0 8 ++
@@ -180,11 +178,11 @@ let opGen op () =
       syscall ++
       comment ("end " ^ op)
    ),
-   (label ("_" ^ op) ++
+   (label op ++
    dword [2] ++
    address [fun1] ++
    label error_string ++
-   asciiz ("second operand null of " ^ op ^ "\n"))
+   asciiz ("second operand null of " ^ op))
 
 let constGen () =
    nop
@@ -200,7 +198,7 @@ let baseFunctions () =
       (code ++ code'), (data ++ data')
    )
    (nop,nop)
-   [forceGen; putCharGen; errorGen; opGen "div"; opGen "rem"; constGen]
+   [forceGen; putCharGen; errorGen; opGen "_div"; opGen "_rem"; constGen]
 
 let rec compile_expr = function
  | C.Evar v -> 

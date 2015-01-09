@@ -1,67 +1,91 @@
-module L = Lexing
-module E = Error
+open Format
 
-(* parseFile : string -> Ast.file * int
- * Returns the ast associated the code in the file named filename and 
- * the possible exit code *)
-let parseFile filename =
-    let lexbuf = L.from_channel (open_in filename) in
-    try begin
-            lexbuf.L.lex_curr_p <- 
-                { lexbuf.L.lex_curr_p with L.pos_fname = filename };
-            (Parser.file Lexer.lexer lexbuf,0)
-    end with
-    | Lexer.LexingError -> 
-        let pos1 = L.lexeme_start_p lexbuf
-        and pos2 = L.lexeme_end_p lexbuf in
-        Format.eprintf "%aLexical error.@." E.print_location (E.Loc(pos1,pos2));
-        ([],1)
-    | Parser.Error -> 
-        let pos1 = L.lexeme_start_p lexbuf
-        and pos2 = L.lexeme_end_p lexbuf in
-        Format.eprintf "%aSyntax error.@." E.print_location (E.Loc(pos1,pos2));
-        ([],1)
-    | _ ->
-        Format.eprintf "Internal error";
-        ([],2)
+let parse_only = ref false
+let type_only = ref false
 
-let parseOnly = ref false
-let typeOnly = ref false 
+(* Noms des fichiers source et cible *)
+let ifile = ref ""
+let ofile = ref ""
 
-let treatsFileExit filename =
-    let (ast, code) = parseFile filename in
-    if !parseOnly || code <> 0 then
-        exit code
-    else begin
-        try Type.infer ast;
-        if !typeOnly then
-            exit 0;
-        let ast' = GenCode.compile_program (Make_closures.transform (Simplify.simplify ast)) "outfile.s" in
+let set_file f s = f := s
+
+(* Les options du compilateur que l'on affiche avec --help *)
+let options =
+  ["--parse-only", Arg.Set parse_only,
+   "  Pour ne faire uniquement que la phase d'analyse syntaxique"; "--type-only", Arg.Set type_only,
+   "  Pour s'arrêter après le typage"; "-o", Arg.String (set_file ofile), 
+   "<file>  Pour indiquer le mom du fichier de sortie"]
+
+let usage = "usage: petitghc [option] file.hs"
+
+let localisationAffiche pos =
+  let l = pos.Lexing.pos_lnum in
+  let c = pos.Lexing.pos_cnum - pos.Lexing.pos_bol + 1 in
+  eprintf "File \"%s\", line %d, characters %d-%d:\n" !ifile l (c-1) c
+
+let () = 
+	Arg.parse options (set_file ifile) usage;
+	
+	if !ifile="" then begin eprintf "Aucun fichier à compiler\n@?"; exit 1 end;
+	
+	
+	if not (Filename.check_suffix !ifile ".hs") then begin
+    eprintf "Le fichier d'entrée doit avoir l'extension .hs\n@?";
+    Arg.usage options usage;
+    exit 1
+  end;	
+	
+	let f = open_in !ifile in
+	
+  if !ofile="" then ofile := Filename.chop_suffix !ifile ".hs" ^ ".s";
+  
+  (* Création d'un tampon d'analyse lexicale *)
+  let buf = Lexing.from_channel f in
+  try
+    let p = Parser.fichier Lexer.token buf in begin
+    close_in f;
+    
+    (* On s'arrête ici si on ne veut faire que le parsing *)
+    if !parse_only then begin  Printer.print_fichier p; exit 0; end;
+
+    let tp = Typage.typeof p in
+    
+    if !type_only then begin Typprinter.tprint_fichier tp; exit 0; end;
+    
+    (*TODO : transformation de l'arbre : interfacage*)
+    
+    
+    (*TODO A compléter pour la production de code*)
+    let _ = GenCode.compile_program (Make_closures.transform (Simplify.simplify (Adapt.adapter tp))) "outfile.s" in
         exit 0
-        with
-        | E.SyntaxError s ->
-            (Format.eprintf "Syntax error: ";
-            Format.eprintf "%s.@." s;
-            exit 1)
-        | E.SemantError s ->
-            (Format.eprintf "Error: ";
-            Format.eprintf "%s.@." s;
-            exit 1)
-        | Type.UnificationFailure (t1,t2,(pos1,pos2)) ->
-            (Format.eprintf "%aTyping error. The error lies in %s <> %s@." E.print_location (E.Loc(pos1,pos2))
-                                                     (Type.type_to_string t1)
-                                                     (Type.type_to_string t2);
-            exit 1)
+    
+    
     end
+  with
+    | Lexer.Lexing_error c ->
+	(* Erreur lexicale. On récupère sa position absolue et
+	   on la convertit en numéro de ligne *)
+	localisationAffiche (Lexing.lexeme_start_p buf);
+	eprintf "lexing error: %s@." c;
+	exit 1
+    | Parser.Error ->
+	(* Erreur syntaxique. On récupère sa position absolue et on la
+	   convertit en numéro de ligne *)
+	localisationAffiche (Lexing.lexeme_start_p buf);
+	eprintf "syntax error@.";
+	exit 1
+	
+	  | Typage.Typing_error (c,s) ->
+	(* Erreur de type : on récupère les coordonnées dans c:loc*)
+	localisationAffiche (c);
+	eprintf "typing error: %s@." s;
+	exit 1 
+    (*| Alloc.VarUndef s-> 
+	(* Erreur d'utilisation de variable pendant la compilation *)
+	eprintf 
+	  "Erreur de compilation: la variable %s n'est pas definie@." s;
+	exit 1*)
+	
 
-let main =
-   let speclist =
-       [("--parse-only", Arg.Set parseOnly, "Enables parse only mode");
-        ("--type-only" , Arg.Set typeOnly , "Enables type inference only mode")]
-   in
-   let usageMessage = 
-       "Petitghc is a small compiler for a subset of the Haskell language: \
-        call with ./petitghc filename or ./petitghc --parse-only filename" in
-   Arg.parse speclist treatsFileExit usageMessage
+	
 
-let () = main
