@@ -85,18 +85,18 @@ spim -file outfile.s || exit 1
 echo "tests/exec/bool1.hs" 
 ./petitghc tests/exec/bool1.hs     
 spim -file outfile.s || exit 1
-# echo "tests/exec/cycle4.hs" 
-# ./petitghc tests/exec/cycle4.hs   
-# spim -file outfile.s || exit 1
-# echo "tests/exec/fun1.hs" 
-# ./petitghc tests/exec/fun1.hs          
-# spim -file outfile.s || exit 1
-# echo "tests/exec/lazy1.hs" 
-# ./petitghc tests/exec/lazy1.hs   
-# spim -file outfile.s || exit 1
-# echo "tests/exec/lazy6.hs" 
-# ./petitghc tests/exec/lazy6.hs        
-# spim -file outfile.s || exit 1
+echo "tests/exec/cycle4.hs" 
+./petitghc tests/exec/cycle4.hs   
+spim -file outfile.s || exit 1
+echo "tests/exec/fun1.hs" 
+./petitghc tests/exec/fun1.hs          
+spim -file outfile.s || exit 1
+echo "tests/exec/lazy1.hs" 
+./petitghc tests/exec/lazy1.hs   
+spim -file outfile.s || exit 1
+echo "tests/exec/lazy6.hs" 
+./petitghc tests/exec/lazy6.hs        
+spim -file outfile.s || exit 1
 # echo "tests/exec/mergesort1.hs" 
 # ./petitghc tests/exec/mergesort1.hs   
 # spim -file outfile.s || exit 1

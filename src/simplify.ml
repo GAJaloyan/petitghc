@@ -24,7 +24,7 @@ let rec simpe = function
    | Adapt.Neg (e,_) -> 
        Inter.Neg (simpe e)
    | Adapt.BinOp (e1,o,e2,_) -> 
-       Inter.BinOp (simpe e1, ast_op_inter o, Inter.Thunk (Inter.Lambda ("_",(simpe e2))))
+       Inter.BinOp (Inter.Thunk (Inter.Lambda ("_",(simpe e1))), ast_op_inter o, Inter.Thunk (Inter.Lambda ("_",(simpe e2))))
    | Adapt.If (e1,e2,e3,_) -> 
        Inter.If (simpe e1, simpe e2, simpe e3)
    | Adapt.Let ((bs,_), e,_) -> 
