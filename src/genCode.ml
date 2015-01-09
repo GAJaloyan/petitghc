@@ -79,7 +79,7 @@ let putCharGen () =
    jr ra ++
    comment "end putChar")
    ,
-   (label "putChar" ++
+   (label "_putChar" ++
    dword [2] ++
    address ["_putCharFun"])
 
@@ -89,21 +89,28 @@ let errorGen () =
      let printChar = getNextLabel () in
      comment "start error" ++
      label errorFun ++
-     lw t0 areg (0, a0) ++
-     beqz t0 printChar ++
+     push a0 ++
+     move a0 a2 ++
+     jal force ++
+     lw t0 areg (0, a0) ++ (* if the top of the list is empty *)
+     bnez t0 printChar ++
      li v0 17 ++ (* exit2 systemcall *)
      li a0 1 ++
      syscall ++
      label printChar ++
-     move t0 a0 ++
-     lw a0 areg (4,t0) ++
+     lw t0 areg (4,a0) ++ (* top of the list in t0 *)
+     push a0 ++
+     move a0 t0 ++ (* top of the list in a0 *)
+     jal force ++
+     lw a0 areg (4,a0) ++ (* forces the evaluation of the top of the list *)
      li v0 11 ++
      syscall ++
-     lw a0 areg (8,t0) ++
+     pop a0 ++
+     lw a2 areg (8,a0) ++ (* bottom of the list in a2 *)
      j errorFun ++
      comment "end error"
    ),
-   (label "error" ++
+   (label "_error" ++
    dword [2] ++
    address [errorFun])
 
@@ -132,7 +139,7 @@ let opGen op () =
       lw a0 areg (0,a1) ++ (* gets the first argument *)
       jal force ++
       pop a1 ++
-      (match op with "div" -> div | "rem" -> rem
+      (match op with "_div" -> div | "_rem" -> rem
                    | _ -> failwith "impossible case") v0 a1 oreg a0 ++
       jr ra ++
       comment ("end " ^ op)
@@ -147,7 +154,7 @@ let baseFunctions () =
       (code ++ code'), (data ++ data')
    )
    (nop,nop)
-   [forceGen; putCharGen; errorGen; opGen "div"; opGen "rem"]
+   [forceGen; putCharGen; errorGen; opGen "_div"; opGen "_rem"]
 
 let rec compile_expr = function
  | C.Evar v -> 
@@ -248,11 +255,27 @@ let rec compile_expr = function
 
  | C.Elet (bs,e) ->
      comment "begin let in" ++
+     (* creates the thunks *)
      (List.fold_left
-       (fun acc (i,e') ->
+       (fun acc (i,_) ->
           acc ++
-          compile_expr e' ++
-          sw v0 areg (i,fp))
+          push a0 ++
+          li a0 8 ++
+          li v0 9 ++
+          syscall ++
+          li t0 3 ++
+          sw t0 areg (0,v0) ++
+          sw v0 areg (i,fp) ++
+          pop a0)
+       nop
+       bs) ++
+     (* evaluates the expressions in the let (they are all closures) *)
+     (List.fold_left
+       (fun acc (i,e) ->
+          acc ++
+          compile_expr e ++
+          lw t1 areg (i,fp) ++ (* thunk associated with i *)
+          sw v0 areg (4,t1))
        nop
        bs) ++
      compile_expr e ++
@@ -301,7 +324,7 @@ let rec compile_expr = function
      pop a0 ++
      pop a1 ++
      pop ra ++
-     lw t0 areg (0,v0) ++ (* if the result is 0 (empty list *)
+     lw t0 areg (0,v0) ++ (* if the result is 0 (empty list) *)
      bnez t0 case_branch2 ++
      code_e2 ++
      j case_end ++
@@ -330,15 +353,26 @@ let rec compile_expr = function
      pop a0
 
  | C.Eneg e ->
-
      let code_e = compile_expr e in
      code_e ++
+     push a1 ++
+     push a0 ++
+     push ra ++
      move a0 v0 ++
-     jal force ++
+     jal force ++ (* a0 contains now an integer value *)
      li t0 0 ++
-     sub v0 t0 oreg a0
+     lw t1 areg (4,a0) ++
+     sub t0 t0 oreg t1 ++
+     li v0 9 ++
+     li a0 8 ++
+     syscall ++
+     sw t0 areg (0,v0) ++
+     sw t1 areg (4,v0) ++
+     pop ra ++
+     pop a0 ++
+     pop a1
 
- | C.EbinOp (e1,o,e2) -> 
+ | C.EbinOp (e1,o,e2) when o <> C.Colon -> 
      let code_e1 = compile_expr e1 in
      let code_e2 = compile_expr e2 in
 
@@ -368,34 +402,57 @@ let rec compile_expr = function
      lw t2 areg (4,t3) ++
      pop t3 ++ (* first operand *)
      lw t1 areg (4,t3) ++
+     
+     push a0 ++
+     li a0 8 ++
+     li v0 9 ++
+     syscall ++
+     pop a0 ++
 
-     (let make_simple_val = 
-        sw t0 areg (4,v0) ++
-        li t0 0 ++
-        sw t0 areg (0,v0)
-      and alloc n = push a0 ++ li a0 n ++ li v0 9 ++
-                    syscall ++ pop a0 in
-     match o with
-     | C.Plus      -> alloc 8 ++ add t0 t1 oreg t2 ++ make_simple_val
-     | C.Minus     -> alloc 8 ++ sub t0 t1 oreg t2 ++ make_simple_val
-     | C.Time      -> alloc 8 ++ mul t0 t1 oreg t2 ++ make_simple_val
-     | C.LowerEq   -> alloc 8 ++ sle t0 t1 t2 ++ make_simple_val
-     | C.GreaterEq -> alloc 8 ++ sge t0 t1 t2 ++ make_simple_val
-     | C.Greater   -> alloc 8 ++ sgt t0 t1 t2 ++ make_simple_val
-     | C.Lower     -> alloc 8 ++ slt t0 t1 t2 ++ make_simple_val
-     | C.Unequal   -> alloc 8 ++ sne t0 t1 t2 ++ make_simple_val
-     | C.Equal     -> alloc 8 ++ seq t0 t1 t2 ++ make_simple_val
-     | C.And       -> alloc 8 ++ and_  t0 t1 t2 ++ make_simple_val
-     | C.Or        -> alloc 8 ++ or_ t0 t1 t2 ++ make_simple_val
-     | C.Colon     -> 
-           alloc 12 ++ 
-           sw t1 areg (4, v0) ++
-           sw t2 areg (8, v0) ++
-           li t0 1 ++
-           sw t0 areg (0, v0)
+     (match o with
+     | C.Plus      -> add t0 t1 oreg t2
+     | C.Minus     -> sub t0 t1 oreg t2
+     | C.Time      -> mul t0 t1 oreg t2
+     | C.LowerEq   -> sle t0 t1 t2
+     | C.GreaterEq -> sge t0 t1 t2
+     | C.Greater   -> sgt t0 t1 t2
+     | C.Lower     -> slt t0 t1 t2
+     | C.Unequal   -> sne t0 t1 t2
+     | C.Equal     -> seq t0 t1 t2
+     | C.And       -> and_  t0 t1 t2
+     | C.Or        -> or_ t0 t1 t2 
+     | C.Colon     -> failwith "impossible"
      ) ++
+
+     sw t0 areg (4,v0) ++
+     li t0 0 ++
+     sw t0 areg (0,v0) ++
      pop ra ++
      comment "end EbinOp"
+
+ | C.EbinOp (e1,_,e2) -> 
+     let code_e1 = compile_expr e1 in
+     let code_e2 = compile_expr e2 in
+
+     comment "begin colon" ++
+     push ra ++
+     code_e1 ++
+     push v0 ++ (* result of e1 on top of the stack *)
+
+     code_e2 ++ 
+     move t2 v0 ++
+     pop t1 ++ (* first operand *)
+     push a0 ++
+     li a0 12 ++
+     li v0 9 ++
+     syscall ++
+     pop a0 ++
+     sw t2 areg (8,v0) ++
+     sw t1 areg (4,v0) ++
+     li t0 1 ++
+     sw t0 areg (0,v0) ++
+     pop ra ++
+     comment "end colon"
 
  | C.Etrue ->
      push a0 ++

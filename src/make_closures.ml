@@ -62,24 +62,17 @@ let getClosureName () =
 
 let getClosure env e =
    let freevars_of_e = freevars e in
-   let closure = SSet.fold
-     (fun x acc ->
+   let i = ref 4 in (* in a closure, the first two entries are the function
+                       name and a type indication *)
+   SSet.fold
+     (fun x (closure, closureEnv) ->
         if SMap.mem x env then
-            (SMap.find x env)::acc
+          i := !i + 4;
+          ((SMap.find x closure)::acc, SMap.add x (C.Vclos !i) closureEnv)
         else
           acc)
      freevars_of_e
-     [] in
-   let i = ref 4 in (* in a closure, the first two entries are the function
-                       name and a type indication *)
-   let closureEnv = SSet.fold 
-     (fun x acc -> 
-        if SMap.mem x env 
-          then (i := !i+4; SMap.add x (C.Vclos !i) acc)
-          else acc)
-     freevars_of_e
-     SMap.empty
-   in (closure, closureEnv)
+     ([],SMap.empty)
 
 (** next is the number of items on the current frame 
  *  env is the environment minus the global environment *)
@@ -155,7 +148,7 @@ let rec transforme env next = function
          if SMap.mem x env then
            SMap.find x env
          else
-           C.Vglobal x
+           C.Vglobal ("_" ^ x)
        ), next
    | I.True ->
        C.Etrue, next
@@ -182,7 +175,7 @@ let transform f =
    (List.map 
      (fun (x,e) -> 
         let (e,fpmax) = transforme (SMap.empty) 0 e in
-        C.Let ((if x = "main" then "_main" else x), e)
+        C.Let ("_" ^ x, e)
      ) 
      f
    ) 

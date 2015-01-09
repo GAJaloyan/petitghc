@@ -7,7 +7,7 @@
 
     let char_of_car s =
         if String.length s = 1 then s.[0]
-        else match s.[0] with
+        else match s.[1] with
         | 'n'  -> '\n'
         | 't'  -> '\t'
         | '"'  -> '"'

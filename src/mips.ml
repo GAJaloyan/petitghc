@@ -139,7 +139,8 @@ let pop r =
 let popn n =
   add sp sp oi n
 
-let pushn n = sub sp sp oi n
+let pushn n = 
+  sub sp sp oi n
 
 type program = {
   text : [ `text ] asm;

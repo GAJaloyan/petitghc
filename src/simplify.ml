@@ -28,9 +28,10 @@ let rec simpe = function
    | Ast.If (e1,e2,e3,_) -> 
        Inter.If (simpe e1, simpe e2, simpe e3)
    | Ast.Let ((bs,_), e,_) -> 
+       (* the thunks will be added during compilation *)
        Inter.Let 
          (List.map 
-           (fun (x,e,_) -> (x, Inter.Thunk (Inter.Lambda ("_", simpe e)))) 
+           (fun (x,e,_) -> (x, (Inter.Lambda ("_", simpe e))))
            bs, 
          simpe e)
    | Ast.Case (e1,e2,i1,i2,e3,_) ->
