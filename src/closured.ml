@@ -15,7 +15,7 @@ type var =
 
 type expr =
   | Evar of var
-  | Eclos of string * var list
+  | Eclos of string * (var * int (* position in the closure *)) list
   | Eapp of expr * expr
   | Ethunk of expr
   | Elet of ((int * expr) list) * expr
@@ -53,7 +53,10 @@ let rec print_expr d = function
   | Eclos (x,bs) ->
        print_space d;
        Printf.printf "Eclos(%s,\n" x;
-       List.iter (print_var (d+1)) bs;
+       List.iter (fun (x,p) -> print_space (d+1); 
+                               Printf.printf "%d\n" p;
+                               print_var (d+1) x) 
+                 bs;
        print_space d;
        Printf.printf ")\n"
   | Eapp (e1,e2) ->

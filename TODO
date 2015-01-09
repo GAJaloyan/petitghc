@@ -1,3 +1,7 @@
 No global declaration can have the name of one of the functions from the librarie.
 Problem with user-defined labels when similar to the ones from the assembler
 (spim complains).
+
+spim does not understand the syscall 17 which specifies the exit code, but it
+works in Mars. That's why at the end of program containing errors, there will 
+be an exec-fail message from spim .

@@ -66,11 +66,11 @@ let getClosure env e =
                        name and a type indication *)
    SSet.fold
      (fun x (closure, closureEnv) ->
-        if SMap.mem x env then
+        if SMap.mem x env then begin
           i := !i + 4;
-          ((SMap.find x closure)::acc, SMap.add x (C.Vclos !i) closureEnv)
-        else
-          acc)
+          (((SMap.find x env), !i)::closure, SMap.add x (C.Vclos !i) closureEnv)
+        end else
+          (closure, closureEnv))
      freevars_of_e
      ([],SMap.empty)
 

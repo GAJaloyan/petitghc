@@ -18,12 +18,14 @@ make
 echo "exec"
 ./petitghc tests/exec/append1.hs   
 spim -file outfile.s
+./petitghc tests/exec/church.hs     
+spim -file outfile.s
 ./petitghc tests/exec/church2.hs    
-java -jar Mars4_5.jar outfile.s
-# ./petitghc tests/exec/cycle2.hs   
-# spim -file outfile.s
+spim -file outfile.s
+./petitghc tests/exec/cycle2.hs   
+spim -file outfile.s
 # ./petitghc tests/exec/fib1.hs          
-# spim -file outfile.s
+# spim  -lstack 8000000 -ldata 8000000 -file outfile.s
 # ./petitghc tests/exec/iter2.hs   
 # spim -file outfile.s
 # ./petitghc tests/exec/lazy4.hs        
@@ -59,8 +61,6 @@ java -jar Mars4_5.jar outfile.s
 # ./petitghc tests/exec/queue1.hs
 # spim -file outfile.s
 # ./petitghc tests/exec/bool1.hs     
-# spim -file outfile.s
-# ./petitghc tests/exec/church.hs     
 # spim -file outfile.s
 # ./petitghc tests/exec/cycle4.hs   
 # spim -file outfile.s

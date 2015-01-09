@@ -118,6 +118,8 @@ let errorGen () =
 let opGen op () =
    let fun1 = getNextLabel () in
    let fun2 = getNextLabel () in
+   let error_string = getNextLabel () in
+   let error_branch = getNextLabel () in
    (
       comment ("start " ^ op) ++
       label fun1 ++
@@ -130,23 +132,65 @@ let opGen op () =
       sw t0 areg (0,v0) ++
       la t0 alab fun2 ++
       sw t0 areg (4,v0) ++
-      sw a0 areg (8,v0) ++
+      sw a2 areg (8,v0) ++ (* places the argument inside the closure *)
       jr ra ++
 
       label fun2 ++
-      jal force ++ (* evaluates the second argument *)
       push a0 ++
-      lw a0 areg (0,a1) ++ (* gets the first argument *)
-      jal force ++
+      push a1 ++
+      push ra ++
+      move a0 a2 ++
+      jal force ++ (* evaluates the second argument *)
+      move t0 a0 ++
+      pop ra ++
       pop a1 ++
-      (match op with "_div" -> div | "_rem" -> rem
-                   | _ -> failwith "impossible case") v0 a1 oreg a0 ++
+      pop a0 ++
+      push ra ++
+      push a0 ++
+      push a1 ++
+      push t0 ++
+      lw a0 areg (8,a1) ++ (* gets the first argument *)
+      jal force ++
+      move t0 a0 ++
+      pop t1 ++ (* t1 contains the second argument *)
+      pop a1 ++
+      pop a0 ++
+      pop ra ++
+      beqz t1 error_branch ++
+      (match op with "_div" -> div 
+                   | "_rem" -> rem
+                   | _ -> failwith "impossible case") t0 t0 oreg t1 ++
+      li v0 9 ++
+      li a0 8 ++
+      syscall ++
+      sw t0 areg (4,v0) ++ (* saves the result of the operation *)
+      li t0 0 ++
+      sw t0 areg (0,v0) ++
       jr ra ++
+
+      label error_branch ++ (* prints the error string and exit with
+                               exit code 1 *)
+      li v0 4 ++
+      la a0 alab error_string ++
+      syscall ++
+      li a0 1 ++
+      li v0 17 ++
+      syscall ++
       comment ("end " ^ op)
    ),
    (label op ++
    dword [2] ++
-   address [fun1])
+   address [fun1] ++
+   label error_string ++
+   asciiz ("second operand null of " ^ op))
+
+let constGen () =
+   nop
+   ,
+   (label "__null" ++
+   dword [0;0] ++
+   label "__true" ++
+   dword [0;1])
 
 let baseFunctions () =
    List.fold_left (fun (code,data) f ->
@@ -154,7 +198,7 @@ let baseFunctions () =
       (code ++ code'), (data ++ data')
    )
    (nop,nop)
-   [forceGen; putCharGen; errorGen; opGen "_div"; opGen "_rem"]
+   [forceGen; putCharGen; errorGen; opGen "_div"; opGen "_rem"; constGen]
 
 let rec compile_expr = function
  | C.Evar v -> 
@@ -182,20 +226,18 @@ let rec compile_expr = function
      sw t0 areg (4,v0) ++
      li t0 2 ++
      sw t0 areg (0,v0) ++
-     fst (
-       List.fold_left 
-       (fun (acc,posClos) v ->
-        (acc ++
+     (List.fold_left 
+        (fun acc (v,posClos) ->
+        acc ++
          (match v with 
          | C.Vglobal x -> la t0 alab x 
          | C.Vlocal n  -> lw t0 areg (n, fp) 
          | C.Vclos n   -> lw t0 areg (n, a1) 
          | C.Varg      -> move t0 a2
-        ) ++ sw t0 areg (posClos, v0)),
-        (posClos+4)
-       )
-       (nop,8)
-       vs) ++
+        ) ++ sw t0 areg (posClos, v0))
+        nop
+        vs
+     ) ++
      comment ("endClos" ^ f)
 
  | C.Eapp (e1,e2) ->
