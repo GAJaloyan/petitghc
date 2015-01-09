@@ -9,7 +9,7 @@ let nextNbLabels = ref 0
 
 let getNextLabel () =
    incr nextNbLabels;
-   "_l" ^ (string_of_int !nextNbLabels)
+   "__l" ^ (string_of_int !nextNbLabels)
 
 let force = "_force"
 
@@ -259,13 +259,6 @@ let rec compile_expr = function
      push t0 ++ (* closure on top of the stack *)
 
      code_e2 ++ (* argument in v0 *)
-     (*push a0 ++
-     push a1 ++
-     move a0 v0 ++
-     jal force ++
-     move t0 a0 ++ (* argument in t0 *)
-     pop a1 ++
-     pop a0 ++*)
      pop t1 ++ (* closure in t1 *)
      push a2 ++
      push a1 ++
@@ -594,7 +587,7 @@ and compile_decl (code,data) = function
      data
 
 let compile_program (p : C.decl list) ofile =
-   (* C.print_prog p;*)
+   C.print_prog p;
    let baseFuncCode, baseFuncData = baseFunctions () in
    let codefun, datafun = List.fold_left compile_decl (nop, nop) p in
    let p =

@@ -49,39 +49,39 @@ spim -file outfile.s || exit 1
 echo "tests/exec/put_char1.hs" 
 ./petitghc tests/exec/put_char1.hs    
 spim -file outfile.s || exit 1
-# echo "tests/exec/shadowing2.hs"
-# ./petitghc tests/exec/shadowing2.hs
-# spim -file outfile.s || exit 1
-# echo "tests/exec/array.hs" 
-# ./petitghc tests/exec/array.hs     
-# spim -file outfile.s || exit 1
-# echo "tests/exec/church3.hs" 
-# ./petitghc tests/exec/church3.hs    
-# spim -file outfile.s || exit 1
-# echo "tests/exec/cycle3.hs" 
-# ./petitghc tests/exec/cycle3.hs   
-# spim -file outfile.s || exit 1
-# echo "tests/exec/fold_left1.hs" 
-# ./petitghc tests/exec/fold_left1.hs    
-# spim -file outfile.s || exit 1
-# echo "tests/exec/iter3.hs" 
-# ./petitghc tests/exec/iter3.hs   
-# spim -file outfile.s || exit 1
-# echo "tests/exec/lazy5.hs" 
-# ./petitghc tests/exec/lazy5.hs        
-# spim -file outfile.s || exit 1
-# echo "tests/exec/match1.hs" 
-# ./petitghc tests/exec/match1.hs       
-# spim -file outfile.s || exit 1
-# echo "tests/exec/nth1.hs" 
-# ./petitghc tests/exec/nth1.hs      
-# spim -file outfile.s || exit 1
-# echo "tests/exec/print_int1.hs" 
-# ./petitghc tests/exec/print_int1.hs      
-# spim -file outfile.s || exit 1
-# echo "tests/exec/queue1.hs"
-# ./petitghc tests/exec/queue1.hs
-# spim -file outfile.s || exit 1
+echo "tests/exec/shadowing2.hs"
+./petitghc tests/exec/shadowing2.hs
+spim -file outfile.s || exit 1
+echo "tests/exec/array.hs" 
+./petitghc tests/exec/array.hs     
+spim -file outfile.s || exit 1
+echo "tests/exec/church3.hs" 
+./petitghc tests/exec/church3.hs    
+spim -ldata 4000000 -file outfile.s || exit 1
+echo "tests/exec/cycle3.hs" 
+./petitghc tests/exec/cycle3.hs   
+spim -file outfile.s || exit 1
+echo "tests/exec/fold_left1.hs" 
+./petitghc tests/exec/fold_left1.hs    
+spim -file outfile.s || exit 1
+echo "tests/exec/iter3.hs" 
+./petitghc tests/exec/iter3.hs   
+spim -file outfile.s || exit 1
+echo "tests/exec/lazy5.hs" 
+./petitghc tests/exec/lazy5.hs        
+spim -lstack 1000000 -file outfile.s || exit 1
+echo "tests/exec/match1.hs" 
+./petitghc tests/exec/match1.hs       
+spim -file outfile.s || exit 1
+echo "tests/exec/nth1.hs" 
+./petitghc tests/exec/nth1.hs      
+spim -file outfile.s || exit 1
+echo "tests/exec/print_int1.hs" 
+./petitghc tests/exec/print_int1.hs      
+spim -file outfile.s || exit 1
+echo "tests/exec/queue1.hs"
+./petitghc tests/exec/queue1.hs
+spim -file outfile.s || exit 1
 # echo "tests/exec/bool1.hs" 
 # ./petitghc tests/exec/bool1.hs     
 # spim -file outfile.s || exit 1

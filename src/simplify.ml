@@ -24,7 +24,7 @@ let rec simpe = function
    | Ast.Neg (e,_) -> 
        Inter.Neg (simpe e)
    | Ast.BinOp (e1,o,e2,_) -> 
-       Inter.BinOp (simpe e1, ast_op_inter o, simpe e2)
+       Inter.BinOp (simpe e1, ast_op_inter o, Inter.Thunk (Inter.Lambda ("_",(simpe e2))))
    | Ast.If (e1,e2,e3,_) -> 
        Inter.If (simpe e1, simpe e2, simpe e3)
    | Ast.Let ((bs,_), e,_) -> 
@@ -47,7 +47,7 @@ and simpse = function
    | Ast.Cst (c,_) -> simpc c
    | Ast.List (l,_) ->
        List.fold_right 
-         (fun e acc -> Inter.BinOp (simpe e, Inter.Colon, acc))
+         (fun e acc -> Inter.BinOp (simpe e, Inter.Colon, Inter.Thunk (Inter.Lambda ("_",acc))))
          l
          Inter.EmptyList
 
@@ -59,7 +59,8 @@ and simpc = function
    | Ast.String (s,_) ->
        let rep = ref Inter.EmptyList in
        for i = pred (String.length s) downto 0 do
-          rep := Inter.BinOp(Inter.Char s.[i], Inter.Colon, !rep)
+          rep := Inter.BinOp(Inter.Char s.[i], Inter.Colon, !rep) (* no need to add a thunk 
+                                                                   * because a char is already evaluated *)
        done;
        !rep
 
