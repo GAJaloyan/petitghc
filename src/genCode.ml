@@ -409,6 +409,68 @@ let rec compile_expr = function
      pop a0 ++
      pop a1
 
+ | C.EbinOp (e1,o,e2) when o == C.And -> 
+     let code_e1 = compile_expr e1 in
+     let code_e2 = compile_expr e2 in
+     let done_op = getNextLabel () in
+
+     comment "begin EbinOp" ++
+     push ra ++
+     code_e1 ++
+     push a0 ++
+     push a1 ++
+     move a0 v0 ++
+     jal force ++
+     move t0 a0 ++
+     pop a1 ++
+     pop a0 ++
+     lw t1 areg (4,t0) ++ (* t0 contains a boolean *)
+     beqz t1 done_op ++
+
+     push t0 ++ (* result on top of the stack *)
+     code_e2 ++
+     push a0 ++
+     push a1 ++
+     move a0 v0 ++
+     jal force ++
+     move t0 a0 ++
+     pop a1 ++
+     pop a0 ++
+     push t0 ++ (* second operand on top of the stack *)
+     
+     pop t3 ++ (* second operand *)
+     lw t2 areg (4,t3) ++
+     pop t3 ++ (* first operand *)
+     lw t1 areg (4,t3) ++
+     
+     push a0 ++
+     li a0 8 ++
+     li v0 9 ++
+     syscall ++
+     pop a0 ++
+
+     (match o with
+     | C.Plus      -> add t0 t1 oreg t2
+     | C.Minus     -> sub t0 t1 oreg t2
+     | C.Time      -> mul t0 t1 oreg t2
+     | C.LowerEq   -> sle t0 t1 t2
+     | C.GreaterEq -> sge t0 t1 t2
+     | C.Greater   -> sgt t0 t1 t2
+     | C.Lower     -> slt t0 t1 t2
+     | C.Unequal   -> sne t0 t1 t2
+     | C.Equal     -> seq t0 t1 t2
+     | C.And       -> and_  t0 t1 t2
+     | C.Or        -> or_ t0 t1 t2 
+     | C.Colon     -> failwith "impossible"
+     ) ++
+
+     label done_op ++
+     sw t0 areg (4,v0) ++
+     li t0 0 ++
+     sw t0 areg (0,v0) ++
+     pop ra ++
+     comment "end EbinOp"
+
  | C.EbinOp (e1,o,e2) when o <> C.Colon -> 
      let code_e1 = compile_expr e1 in
      let code_e2 = compile_expr e2 in

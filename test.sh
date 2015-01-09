@@ -79,12 +79,12 @@ spim -file outfile.s || exit 1
 echo "tests/exec/print_int1.hs" 
 ./petitghc tests/exec/print_int1.hs      
 spim -file outfile.s || exit 1
-echo "tests/exec/queue1.hs"
-./petitghc tests/exec/queue1.hs
-spim -file outfile.s || exit 1
-# echo "tests/exec/bool1.hs" 
-# ./petitghc tests/exec/bool1.hs     
+# echo "tests/exec/queue1.hs"
+# ./petitghc tests/exec/queue1.hs
 # spim -file outfile.s || exit 1
+echo "tests/exec/bool1.hs" 
+./petitghc tests/exec/bool1.hs     
+spim -file outfile.s || exit 1
 # echo "tests/exec/cycle4.hs" 
 # ./petitghc tests/exec/cycle4.hs   
 # spim -file outfile.s || exit 1

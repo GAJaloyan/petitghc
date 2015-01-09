@@ -58,7 +58,7 @@ let () =
     (*TODO A compléter pour la production de code*)
     let ap = Adapt.adapter p in
       begin
-        Adapt.print_file ap;
+        (*Adapt.print_file ap;*)
         let _ = GenCode.compile_program (Make_closures.transform (Simplify.simplify (ap))) "outfile.s" in
           exit 0
       end
