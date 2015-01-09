@@ -258,20 +258,20 @@ let rec compile_expr = function
      pop a0 ++
      push t0 ++ (* closure on top of the stack *)
 
-     code_e2 ++
-     push a0 ++
+     code_e2 ++ (* argument in v0 *)
+     (*push a0 ++
      push a1 ++
      move a0 v0 ++
      jal force ++
      move t0 a0 ++ (* argument in t0 *)
      pop a1 ++
-     pop a0 ++
+     pop a0 ++*)
      pop t1 ++ (* closure in t1 *)
      push a2 ++
      push a1 ++
      push a0 ++
      move a1 t1 ++
-     move a2 t0 ++
+     move a2 v0 ++
      lw t0 areg (4,a1) ++
      jalr t0 ++
      pop a0 ++
@@ -499,7 +499,7 @@ let rec compile_expr = function
      comment "end colon"
 
  | C.Etrue ->
-     push a0 ++
+     (*push a0 ++
      li a0 8 ++
      li v0 9 ++
      syscall ++
@@ -507,10 +507,11 @@ let rec compile_expr = function
      sw t0 areg (4,v0) ++
      li t0 0 ++
      sw t0 areg (0,v0) ++
-     pop a0
+     pop a0*)
+     la v0 alab "__true"
 
  | C.Efalse ->
-     push a0 ++
+     (*push a0 ++
      li a0 8 ++
      li v0 9 ++
      syscall ++
@@ -518,7 +519,8 @@ let rec compile_expr = function
      sw t0 areg (4,v0) ++
      li t0 0 ++
      sw t0 areg (0,v0) ++
-     pop a0
+     pop a0 *)
+     la v0 alab "__null"
 
  | C.Eint n ->
      push a0 ++
@@ -543,7 +545,7 @@ let rec compile_expr = function
      pop a0
 
  | C.EemptyList ->
-     push a0 ++
+     (*push a0 ++
      li a0 8 ++
      li v0 9 ++
      syscall ++
@@ -551,7 +553,8 @@ let rec compile_expr = function
      sw t0 areg (4,v0) ++
      li t0 0 ++
      sw t0 areg (0,v0) ++
-     pop a0
+     pop a0*)
+     la v0 alab "__null"
 
 and compile_decl (code,data) = function
  | C.Let (x,e) ->
@@ -591,7 +594,7 @@ and compile_decl (code,data) = function
      data
 
 let compile_program (p : C.decl list) ofile =
-   C.print_prog p;
+   (* C.print_prog p;*)
    let baseFuncCode, baseFuncData = baseFunctions () in
    let codefun, datafun = List.fold_left compile_decl (nop, nop) p in
    let p =
