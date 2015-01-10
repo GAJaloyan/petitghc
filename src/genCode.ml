@@ -401,6 +401,30 @@ let rec compile_expr = function
      pop a0 ++
      pop a1
 
+ | C.EbinOp (e1,C.Colon,e2) -> 
+     let code_e1 = compile_expr e1 in
+     let code_e2 = compile_expr e2 in
+
+     comment "begin colon" ++
+     push ra ++
+     code_e1 ++
+     push v0 ++ (* result of e1 on top of the stack *)
+
+     code_e2 ++ 
+     move t2 v0 ++
+     pop t1 ++ (* first operand *)
+     push a0 ++
+     li a0 12 ++
+     li v0 9 ++
+     syscall ++
+     pop a0 ++
+     sw t2 areg (8,v0) ++
+     sw t1 areg (4,v0) ++
+     li t0 1 ++
+     sw t0 areg (0,v0) ++
+     pop ra ++
+     comment "end colon"
+
  | C.EbinOp (e1,C.Or,e2) -> 
      let code_e1 = compile_expr e1 in
      let code_e2 = compile_expr e2 in
@@ -416,37 +440,12 @@ let rec compile_expr = function
      move t0 a0 ++
      pop a1 ++
      pop a0 ++
-     lw t0 areg (4,t0) ++ (* t0 contains a boolean *)
-     bnez t0 done_op ++
+     lw t1 areg (4,t0) ++ (* t0 contains a boolean *)
+     bnez t1 done_op ++
 
-     push t0 ++ (* result on top of the stack *)
      code_e2 ++
-     push a0 ++
-     push a1 ++
-     move a0 v0 ++
-     jal force ++
-     move t0 a0 ++
-     pop a1 ++
-     pop a0 ++
-     push t0 ++ (* second operand on top of the stack *)
-     
-     pop t3 ++ (* second operand *)
-     lw t2 areg (4,t3) ++
-     pop t3 ++ (* first operand *)
-     lw t1 areg (4,t3) ++
-     
-     push a0 ++
-     li a0 8 ++
-     li v0 9 ++
-     syscall ++
-     pop a0 ++
-
-     or_ t0 t1 t2 ++
 
      label done_op ++
-     sw t0 areg (4,v0) ++
-     li t0 0 ++
-     sw t0 areg (0,v0) ++
      pop ra ++
      comment "end EbinOp"
 
@@ -468,38 +467,13 @@ let rec compile_expr = function
      lw t0 areg (4,t0) ++ (* t0 contains a boolean *)
      beqz t0 done_op ++
 
-     push t0 ++ (* result on top of the stack *)
      code_e2 ++
-     push a0 ++
-     push a1 ++
-     move a0 v0 ++
-     jal force ++
-     move t0 a0 ++
-     pop a1 ++
-     pop a0 ++
-     push t0 ++ (* second operand on top of the stack *)
-     
-     pop t3 ++ (* second operand *)
-     lw t2 areg (4,t3) ++
-     pop t3 ++ (* first operand *)
-     lw t1 areg (4,t3) ++
-     
-     push a0 ++
-     li a0 8 ++
-     li v0 9 ++
-     syscall ++
-     pop a0 ++
-
-     and_  t0 t1 t2 ++
 
      label done_op ++
-     sw t0 areg (4,v0) ++
-     li t0 0 ++
-     sw t0 areg (0,v0) ++
      pop ra ++
      comment "end and"
 
- | C.EbinOp (e1,o,e2) when o <> C.Colon -> 
+ | C.EbinOp (e1,o,e2) -> 
      let code_e1 = compile_expr e1 in
      let code_e2 = compile_expr e2 in
 
@@ -556,30 +530,6 @@ let rec compile_expr = function
      sw t0 areg (0,v0) ++
      pop ra ++
      comment "end EbinOp"
-
- | C.EbinOp (e1,_,e2) -> 
-     let code_e1 = compile_expr e1 in
-     let code_e2 = compile_expr e2 in
-
-     comment "begin colon" ++
-     push ra ++
-     code_e1 ++
-     push v0 ++ (* result of e1 on top of the stack *)
-
-     code_e2 ++ 
-     move t2 v0 ++
-     pop t1 ++ (* first operand *)
-     push a0 ++
-     li a0 12 ++
-     li v0 9 ++
-     syscall ++
-     pop a0 ++
-     sw t2 areg (8,v0) ++
-     sw t1 areg (4,v0) ++
-     li t0 1 ++
-     sw t0 areg (0,v0) ++
-     pop ra ++
-     comment "end colon"
 
  | C.Etrue ->
      la v0 alab "__true"

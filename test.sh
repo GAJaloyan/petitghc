@@ -1,4 +1,4 @@
-# make
+make
 
 # echo "syntax/good"
 # ./petitghc --parse-only tests/syntax/good/testfile-comment-1.hs  
