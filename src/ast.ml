@@ -42,11 +42,11 @@ and const =
   loc:loc;
 }
 and constd = 
-	|Ctrue
-	|Cfalse
-	|Cint of int
-	|Cchar of char
-	|Cstring of char list
+  |Ctrue
+  |Cfalse
+  |Cint of int
+  |Cchar of char
+  |Cstring of char list
 
 and lambda =
 {
@@ -54,10 +54,10 @@ and lambda =
   loc:loc;
 }
 and lambdad =
-	{
-		formalslambda : string list; (*ident1*)
-		bodylambda : expr; 
-	}
+{
+  formalslambda : string list; (*ident1*)
+  bodylambda : expr; 
+}
 and def =
 {
   desc:defd;
@@ -65,7 +65,7 @@ and def =
 }
 and defd =
 {
-	gauche    : string;    (*ident1*)
+  gauche  : string;    (*ident1*)
   formals : string list; (* arguments : ident1*)
   body    : expr; 
 }
@@ -77,7 +77,7 @@ type def0 =
 }
 and def0d =
 {
-	gauche0  : string;    (*ident0*)
+  gauche0  : string;    (*ident0*)
   formals0 : string list; (* arguments : ident1*)
   body0    : expr; 
 }
@@ -88,8 +88,8 @@ type program =
   loc:loc;
 }
 and programd =
-	{
+{
   defs : def0 list;
-  }
+}
   
   
