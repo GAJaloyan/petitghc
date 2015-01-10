@@ -24,19 +24,18 @@ let localisationAffiche pos =
   eprintf "File \"%s\", line %d, characters %d-%d:\n" !ifile l (c-1) c
 
 let () = 
-	Arg.parse options (set_file ifile) usage;
-	
-	if !ifile="" then begin eprintf "Aucun fichier à compiler\n@?"; exit 1 end;
-	
-	
-	if not (Filename.check_suffix !ifile ".hs") then begin
+  Arg.parse options (set_file ifile) usage; 
+
+  if !ifile="" then begin eprintf "Aucun fichier à compiler\n@?"; exit 1 end;
+        
+  if not (Filename.check_suffix !ifile ".hs") then begin
     eprintf "Le fichier d'entrée doit avoir l'extension .hs\n@?";
     Arg.usage options usage;
     exit 1
-  end;	
-	
-	let f = open_in !ifile in
-	
+  end;  
+        
+  let f = open_in !ifile in
+        
   if !ofile="" then ofile := Filename.chop_suffix !ifile ".hs" ^ ".s";
   
   (* Création d'un tampon d'analyse lexicale *)
@@ -46,49 +45,45 @@ let () =
     close_in f;
     
     (* On s'arrête ici si on ne veut faire que le parsing *)
-    if !parse_only then begin  Printer.print_fichier p; exit 0; end;
+    if !parse_only then begin  (*Printer.print_fichier p;*) exit 0; end;
 
     let tp = Typage.typeof p in
     
-    if !type_only then begin Typprinter.tprint_fichier tp; exit 0; end;
+    if !type_only then begin (*Typprinter.tprint_fichier tp;*) exit 0; end;
     
-    (*TODO : transformation de l'arbre : interfacage*)
-    
-    
-    (*TODO A compléter pour la production de code*)
     let ap = Adapt.adapter p in
       begin
         (*Adapt.print_file ap;*)
-        let _ = GenCode.compile_program (Make_closures.transform (Simplify.simplify (ap))) "outfile.s" in
+        let _ = GenCode.compile_program (Make_closures.transform (Simplify.simplify (ap))) !ofile in
           exit 0
       end
     
     end
   with
     | Lexer.Lexing_error c ->
-	(* Erreur lexicale. On récupère sa position absolue et
-	   on la convertit en numéro de ligne *)
-	localisationAffiche (Lexing.lexeme_start_p buf);
-	eprintf "lexing error: %s@." c;
-	exit 1
+        (* Erreur lexicale. On récupère sa position absolue et
+           on la convertit en numéro de ligne *)
+        localisationAffiche (Lexing.lexeme_start_p buf);
+        eprintf "lexing error: %s@." c;
+        exit 1
     | Parser.Error ->
-	(* Erreur syntaxique. On récupère sa position absolue et on la
-	   convertit en numéro de ligne *)
-	localisationAffiche (Lexing.lexeme_start_p buf);
-	eprintf "syntax error@.";
-	exit 1
-	
-	  | Typage.Typing_error (c,s) ->
-	(* Erreur de type : on récupère les coordonnées dans c:loc*)
-	localisationAffiche (c);
-	eprintf "typing error: %s@." s;
-	exit 1 
+        (* Erreur syntaxique. On récupère sa position absolue et on la
+           convertit en numéro de ligne *)
+        localisationAffiche (Lexing.lexeme_start_p buf);
+        eprintf "syntax error@.";
+        exit 1
+        
+          | Typage.Typing_error (c,s) ->
+        (* Erreur de type : on récupère les coordonnées dans c:loc*)
+        localisationAffiche (c);
+        eprintf "typing error: %s@." s;
+        exit 1 
     (*| Alloc.VarUndef s-> 
-	(* Erreur d'utilisation de variable pendant la compilation *)
-	eprintf 
-	  "Erreur de compilation: la variable %s n'est pas definie@." s;
-	exit 1*)
-	
+        (* Erreur d'utilisation de variable pendant la compilation *)
+        eprintf 
+          "Erreur de compilation: la variable %s n'est pas definie@." s;
+        exit 1*)
+        
 
-	
+        
 
