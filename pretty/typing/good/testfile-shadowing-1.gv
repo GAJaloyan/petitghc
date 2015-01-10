@@ -1,0 +1,57 @@
+digraph G {
+node [shape=box]
+0 [label="main
+lin:1 col:1",color=red, style=filled]
+1 [label="Elet
+lin:1 col:8",color=green,style=filled]
+0 -> 1
+2 [label="error
+lin:1 col:12",color=crimson, style=filled]
+1 -> 2
+3 [label="Elambda
+lin:1 col:12",color=green,style=filled]
+2 -> 3
+4 [label="arg x",color=orange,style=filled]
+3 -> 4
+5 [label="Eatomiclist
+lin:1 col:22",color=green,style=filled]
+3 -> 5
+6 [label="SEident \"x\"
+lin:1 col:22",color=darkseagreen1,style=filled]
+5 -> 6
+7 [label="Eatomiclist
+lin:1 col:27",color=green,style=filled]
+1 -> 7
+8 [label="SEexpr
+lin:1 col:27",color=darkseagreen1,style=filled]
+7 -> 8
+9 [label="Eatomiclist
+lin:1 col:27",color=green,style=filled]
+8 -> 9
+10 [label="SEident \"putChar\"
+lin:1 col:27",color=darkseagreen1,style=filled]
+9 -> 10
+11 [label="SEexpr
+lin:1 col:35",color=darkseagreen1,style=filled]
+9 -> 11
+12 [label="Eatomiclist
+lin:1 col:36",color=green,style=filled]
+11 -> 12
+13 [label="SEexpr
+lin:1 col:36",color=darkseagreen1,style=filled]
+12 -> 13
+14 [label="Eatomiclist
+lin:1 col:36",color=green,style=filled]
+13 -> 14
+15 [label="SEident \"error\"
+lin:1 col:36",color=darkseagreen1,style=filled]
+14 -> 15
+16 [label="SEconst
+lin:1 col:45",color=darkseagreen1,style=filled]
+14 -> 16
+17 [label="Cchar '
+'
+lin:1 col:45",color=skyblue1,style=filled]
+16 -> 17
+
+}

@@ -1,0 +1,15 @@
+digraph G {
+node [shape=box]
+0 [label="main
+lin:2 col:1",color=red, style=filled]
+1 [label="Eatomiclist
+lin:2 col:8",color=green,style=filled]
+0 -> 1
+2 [label="SEconst
+lin:2 col:8",color=darkseagreen1,style=filled]
+1 -> 2
+3 [label="Cint 42
+lin:2 col:8",color=skyblue1,style=filled]
+2 -> 3
+
+}

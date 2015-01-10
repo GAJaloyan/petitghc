@@ -1,0 +1,24 @@
+digraph G {
+node [shape=box]
+0 [label="main
+lin:2 col:1",color=red, style=filled]
+1 [label="Eatomiclist
+lin:2 col:8",color=green,style=filled]
+0 -> 1
+2 [label="SEexpr
+lin:2 col:8",color=darkseagreen1,style=filled]
+1 -> 2
+3 [label="Eatomiclist
+lin:2 col:8",color=green,style=filled]
+2 -> 3
+4 [label="SEident \"error\"
+lin:2 col:8",color=darkseagreen1,style=filled]
+3 -> 4
+5 [label="SEconst
+lin:2 col:19",color=darkseagreen1,style=filled]
+3 -> 5
+6 [label="Cstring \"oups\"
+lin:2 col:19",color=skyblue1,style=filled]
+5 -> 6
+
+}

@@ -1,0 +1,42 @@
+digraph G {
+node [shape=box]
+0 [label="f
+lin:1 col:1",color=red, style=filled]
+1 [label="Elambda
+lin:1 col:1",color=green,style=filled]
+0 -> 1
+2 [label="arg l",color=orange,style=filled]
+1 -> 2
+3 [label="Ecase
+lin:1 col:7",color=green,style=filled]
+1 -> 3
+4 [label="Eatomiclist
+lin:1 col:12",color=green,style=filled]
+3 -> 4
+5 [label="SEident \"l\"
+lin:1 col:12",color=darkseagreen1,style=filled]
+4 -> 5
+6 [label="[]",color=gold,style=filled]
+3 -> 6
+7 [label="Eatomiclist
+lin:1 col:25",color=green,style=filled]
+6 -> 7
+8 [label="SEconst
+lin:1 col:25",color=darkseagreen1,style=filled]
+7 -> 8
+9 [label="Cint 1
+lin:1 col:25",color=skyblue1,style=filled]
+8 -> 9
+10 [label="x:xs",color=gold,style=filled]
+3 -> 10
+11 [label="Eatomiclist
+lin:1 col:38",color=green,style=filled]
+10 -> 11
+12 [label="SEconst
+lin:1 col:38",color=darkseagreen1,style=filled]
+11 -> 12
+13 [label="Cint 2
+lin:1 col:38",color=skyblue1,style=filled]
+12 -> 13
+
+}
