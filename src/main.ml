@@ -83,10 +83,10 @@ let () =
         eprintf "\nsyntax error@.\n";
         exit 1
         
-    | Typage.Typing_error (c,s) ->
+    | Typage.Typing_error ((p1,p2),s) ->
         (* Erreur de type : on récupère les coordonnées dans c:loc*)
-        localisationAffiche (c);
-        eprintf "typing error: %s@.\n" s;
+        Error.print_location (Format.err_formatter) (Error.Loc(p1,p2));
+        eprintf "\ntyping error: %s@.\n" s;
         exit 1 
     (*| Alloc.VarUndef s-> 
         (* Erreur d'utilisation de variable pendant la compilation *)

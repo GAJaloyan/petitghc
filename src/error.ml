@@ -64,7 +64,7 @@ let set_file chaine =
 
 let print_location ff (Loc(p1,p2)) =
     let n1 = p1.pos_cnum - p1.pos_bol in (* character number *)
-    let n2 = p2.pos_cnum - p2.pos_bol in
+    let n2 = p2.pos_cnum - p2.pos_bol +1 in
     let np1 = p1.pos_cnum in (* character position *)
     let np2 = p2.pos_cnum in
     let l1 = p1.pos_lnum in (* line number *)
