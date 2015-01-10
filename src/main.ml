@@ -20,10 +20,12 @@ let options =
 
 let usage = "usage: petitghc [option] file.hs"
 
-let localisationAffiche pos =
-  let l = pos.Lexing.pos_lnum in
-  let c = pos.Lexing.pos_cnum - pos.Lexing.pos_bol + 1 in
-  eprintf "File \"%s\", line %d, characters %d-%d:\n" !ifile l (c-1) c
+let localisationAffiche (pos1, pos2) =
+  let l = pos1.Lexing.pos_lnum in
+  let c = pos1.Lexing.pos_cnum - pos1.Lexing.pos_bol + 1 in
+  let l2 = pos2.Lexing.pos_lnum in
+  let c2 = pos2.Lexing.pos_cnum - pos2.Lexing.pos_bol + 1 in
+  eprintf "File \"%s\", line %d-%d, characters %d-%d:\n" !ifile l l2 (c) c2
 
 let () = 
   Arg.parse options (set_file ifile) usage; 
@@ -67,13 +69,13 @@ let () =
     | Lexer.Lexing_error c ->
         (* Erreur lexicale. On récupère sa position absolue et
            on la convertit en numéro de ligne *)
-        localisationAffiche (Lexing.lexeme_start_p buf);
+        localisationAffiche (Lexing.lexeme_start_p buf, Lexing.lexeme_end_p buf);
         eprintf "lexing error: %s@." c;
         exit 1
     | Parser.Error ->
         (* Erreur syntaxique. On récupère sa position absolue et on la
            convertit en numéro de ligne *)
-        localisationAffiche (Lexing.lexeme_start_p buf);
+        localisationAffiche (Lexing.lexeme_start_p buf, Lexing.lexeme_end_p buf);
         eprintf "syntax error@.";
         exit 1
         

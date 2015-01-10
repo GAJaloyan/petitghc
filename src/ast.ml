@@ -1,4 +1,4 @@
-type loc = Lexing.position
+type loc = Lexing.position * Lexing.position
 
 exception ErrorUndef of loc*string 
 

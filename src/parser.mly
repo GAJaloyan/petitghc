@@ -77,7 +77,7 @@
 %%
 
 fichier:
-	|d = def0* EOF{ {desc = { defs = d} ; loc = $startpos} }
+	|d = def0* EOF{ {desc = { defs = d} ; loc = $startpos,$endpos} }
 ;
 
 def0:
@@ -86,9 +86,9 @@ def0:
 	{  
 	  {desc = 
 	    {gauche0 = i0; formals0 = []; body0 =
-	        ({desc=Elambda({desc=({formalslambda=i1;bodylambda=e}:Ast.lambdad);loc=$startpos}:Ast.lambda);loc=$startpos}:Ast.expr) 
+	        ({desc=Elambda({desc=({formalslambda=i1;bodylambda=e}:Ast.lambdad);loc=$startpos,$endpos}:Ast.lambda);loc=$startpos,$endpos}:Ast.expr) 
 	    } 
-	  ; loc = $startpos}  
+	  ; loc = $startpos,$endpos}  
 	}
 	|i0 = IDENT0 EGAL e = expr
 	{
@@ -96,7 +96,7 @@ def0:
 	    {gauche0=i0;formals0=[];body0=
 	      (e:Ast.expr)
 	    };
-	  loc=$startpos}
+	  loc=$startpos,$endpos}
 	}
 ;
 
@@ -105,9 +105,9 @@ def:
 	{  
 	  {desc = 
 	    {gauche = i0; formals = []; body =
-	        ({desc=Elambda({desc=({formalslambda=i1;bodylambda=e}:Ast.lambdad);loc=$startpos}:Ast.lambda);loc=$startpos}:Ast.expr) 
+	        ({desc=Elambda({desc=({formalslambda=i1;bodylambda=e}:Ast.lambdad);loc=$startpos,$endpos}:Ast.lambda);loc=$startpos,$endpos}:Ast.expr) 
 	    }; 
-	  loc = $startpos}  
+	  loc = $startpos,$endpos}  
 	}
 	|i0 = IDENT1 EGAL e = expr
 	{
@@ -115,40 +115,40 @@ def:
 	    {gauche=i0;formals=[];body=
 	      (e:Ast.expr)
 	    };
-	  loc=$startpos}
+	  loc=$startpos,$endpos}
 	}
 ;
 
 
 
 const:
-	|VTRUE { {desc = Ctrue ; loc = $startpos}  }
-	|VFALSE { {desc = Cfalse ; loc = $startpos}  }
-	|i = INTEGER { {desc = Cint (i) ; loc = $startpos}  }
-	|c= VCHAR { {desc = Cchar (c) ; loc = $startpos}  }
-	|s = VSTRING { {desc = Cstring (s) ; loc = $startpos}  }
+	|VTRUE { {desc = Ctrue ; loc = $startpos,$endpos}  }
+	|VFALSE { {desc = Cfalse ; loc = $startpos,$endpos}  }
+	|i = INTEGER { {desc = Cint (i) ; loc = $startpos,$endpos}  }
+	|c= VCHAR { {desc = Cchar (c) ; loc = $startpos,$endpos}  }
+	|s = VSTRING { {desc = Cstring (s) ; loc = $startpos,$endpos}  }
 ;
 
 simple_expr:
-	|LPAR e1 = expr RPAR { {desc = SEexpr (e1) ; loc = $startpos}  }
-	|s1 = IDENT1 { {desc = SEident (s1) ; loc = $startpos}  }
-	|c = const { {desc = SEconst (c) ; loc = $startpos}  }
-	|LBRA e1 = separated_list (COMMA,expr) RBRA { {desc = SEblock (e1) ; loc = $startpos}  }
+	|LPAR e1 = expr RPAR { {desc = SEexpr (e1) ; loc = $startpos,$endpos}  }
+	|s1 = IDENT1 { {desc = SEident (s1) ; loc = $startpos,$endpos}  }
+	|c = const { {desc = SEconst (c) ; loc = $startpos,$endpos}  }
+	|LBRA e1 = separated_list (COMMA,expr) RBRA { {desc = SEblock (e1) ; loc = $startpos,$endpos}  }
 ;
 
 %inline op:
-	|PLUS { {descb = Add ; loc = $startpos} }
-	|MOINS{ {descb = Sub ; loc = $startpos} }
-	|MULT { {descb = Mul ; loc = $startpos} }
-	|SmallerEqual { {descb = Infe ; loc = $startpos} }
-	|GreaterEqual { {descb = Supe ; loc = $startpos} }
-	|Smaller { {descb = Infs ; loc = $startpos} }
-	|Greater { {descb = Sups ; loc = $startpos} }
-	|NotEqual { {descb = Uneq ; loc = $startpos} }
-	|EGAL EGAL { {descb = Eq ; loc = $startpos} }
-	|ETET { {descb = And ; loc = $startpos} }
-	|OUOU { {descb = Or ; loc = $startpos} }
-	|COLON { {descb = Head ; loc = $startpos} }
+	|PLUS { {descb = Add ; loc = $startpos,$endpos} }
+	|MOINS{ {descb = Sub ; loc = $startpos,$endpos} }
+	|MULT { {descb = Mul ; loc = $startpos,$endpos} }
+	|SmallerEqual { {descb = Infe ; loc = $startpos,$endpos} }
+	|GreaterEqual { {descb = Supe ; loc = $startpos,$endpos} }
+	|Smaller { {descb = Infs ; loc = $startpos,$endpos} }
+	|Greater { {descb = Sups ; loc = $startpos,$endpos} }
+	|NotEqual { {descb = Uneq ; loc = $startpos,$endpos} }
+	|EGAL EGAL { {descb = Eq ; loc = $startpos,$endpos} }
+	|ETET { {descb = And ; loc = $startpos,$endpos} }
+	|OUOU { {descb = Or ; loc = $startpos,$endpos} }
+	|COLON { {descb = Head ; loc = $startpos,$endpos} }
 ;
 
 liaisons:
@@ -158,27 +158,27 @@ liaisons:
 ;
 
 expr:
-	|e1 = expr ope=op e2=expr { {desc = Ebinop(ope, e1, e2); loc = $startpos} }
+	|e1 = expr ope=op e2=expr { {desc = Ebinop(ope, e1, e2); loc = $startpos,$endpos} }
 	|MOINS e1 = expr 
 	{ 
-	  {desc = Ebinop ({descb = Sub ; loc = $startpos}, 
-	                  {desc = Eatomiclist [{desc = SEconst {desc = (Cint 0) ; loc = $startpos} ; loc = $startpos}]; loc = $startpos}, 
+	  {desc = Ebinop ({descb = Sub ; loc = $startpos,$endpos}, 
+	                  {desc = Eatomiclist [{desc = SEconst {desc = (Cint 0) ; loc = $startpos,$endpos} ; loc = $startpos,$endpos}]; loc = $startpos,$endpos}, 
 	                  e1); 
-	  loc = $startpos} 
+	  loc = $startpos,$endpos} 
 	}
 	
-	|s = simple_expr+ { {desc = Eatomiclist (transformee(s)); loc = $startpos} }
-	|BACKSLASH i = nonempty_list(IDENT1) FLECHE e = expr { {desc = Elambda {desc = {formalslambda = i; bodylambda = e}; loc = $startpos} ; loc = $startpos} }
-	|IF e1 = expr THEN e2 = expr ELSE e3=expr { {desc = Eif(e1, e2, e3); loc = $startpos} }
-	|LET l = liaisons IN e = expr { {desc = Elet(l,e); loc = $startpos} }
+	|s = simple_expr+ { {desc = Eatomiclist (transformee(s)); loc = $startpos,$endpos} }
+	|BACKSLASH i = nonempty_list(IDENT1) FLECHE e = expr { {desc = Elambda {desc = {formalslambda = i; bodylambda = e}; loc = $startpos,$endpos} ; loc = $startpos,$endpos} }
+	|IF e1 = expr THEN e2 = expr ELSE e3=expr { {desc = Eif(e1, e2, e3); loc = $startpos,$endpos} }
+	|LET l = liaisons IN e = expr { {desc = Elet(l,e); loc = $startpos,$endpos} }
 	
-	|CASE e= expr OF LCBR LBRA RBRA FLECHE e1 = expr SEMICOLON i1 = IDENT1 COLON i2 = IDENT1 FLECHE e2 = expr RCBR { {desc = Ecase(e,e1,i1,i2,e2); loc = $startpos} }
-	|CASE e= expr OF LCBR LBRA RBRA FLECHE e1 = expr SEMICOLON i1 = IDENT1 COLON i2 = IDENT1 FLECHE e2 = expr PVACC { {desc = Ecase(e,e1,i1,i2,e2); loc = $startpos} }
+	|CASE e= expr OF LCBR LBRA RBRA FLECHE e1 = expr SEMICOLON i1 = IDENT1 COLON i2 = IDENT1 FLECHE e2 = expr RCBR { {desc = Ecase(e,e1,i1,i2,e2); loc = $startpos,$endpos} }
+	|CASE e= expr OF LCBR LBRA RBRA FLECHE e1 = expr SEMICOLON i1 = IDENT1 COLON i2 = IDENT1 FLECHE e2 = expr PVACC { {desc = Ecase(e,e1,i1,i2,e2); loc = $startpos,$endpos} }
 	
-	|DO e = delimited(LCBR,separated_nonempty_list(SEMICOLON, expr),RCBR) { {desc = Edo(e); loc = $startpos} }
-	|DO e = delimited(LCBR,separated_nonempty_list(SEMICOLON, expr),PVACC) { {desc = Edo(e); loc = $startpos} }
+	|DO e = delimited(LCBR,separated_nonempty_list(SEMICOLON, expr),RCBR) { {desc = Edo(e); loc = $startpos,$endpos} }
+	|DO e = delimited(LCBR,separated_nonempty_list(SEMICOLON, expr),PVACC) { {desc = Edo(e); loc = $startpos,$endpos} }
 	
-	|RETURN LPAR RPAR { {desc = Ereturn; loc = $startpos} }
+	|RETURN LPAR RPAR { {desc = Ereturn; loc = $startpos,$endpos} }
 	
 ;
 

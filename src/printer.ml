@@ -5,14 +5,14 @@ open Printf
 
 let i = ref 0
 
-let localisation pos =
+let localisation (pos,_) =
   let l = pos.pos_lnum in
   let c = pos.pos_cnum - pos.pos_bol + 1 in (l,c)
 
-let loclin pos =
+let loclin (pos,_) =
   let l = pos.pos_lnum in (l)
 
-let loccol pos =
+let loccol (pos,_) =
   let c = pos.pos_cnum - pos.pos_bol + 1 in (c)
 
 
