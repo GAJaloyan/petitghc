@@ -23,8 +23,12 @@ let rec simpe = function
        List.fold_right (fun x acc -> Inter.Lambda (x,acc)) xs (simpe e)
    | Adapt.Neg (e,_) -> 
        Inter.Neg (simpe e)
+   | Adapt.BinOp (e1,Adapt.Colon,e2,_) ->
+       Inter.BinOp (Inter.Thunk (Inter.Lambda ("_",(simpe e1))), 
+                    Inter.Colon, 
+                    Inter.Thunk (Inter.Lambda ("_",(simpe e2))))
    | Adapt.BinOp (e1,o,e2,_) -> 
-       Inter.BinOp (Inter.Thunk (Inter.Lambda ("_",(simpe e1))), ast_op_inter o, Inter.Thunk (Inter.Lambda ("_",(simpe e2))))
+       Inter.BinOp (simpe e1, ast_op_inter o, simpe e2)
    | Adapt.If (e1,e2,e3,_) -> 
        Inter.If (simpe e1, simpe e2, simpe e3)
    | Adapt.Let ((bs,_), e,_) -> 
@@ -47,7 +51,9 @@ and simpse = function
    | Adapt.Cst (c,_) -> simpc c
    | Adapt.List (l,_) ->
        List.fold_right 
-         (fun e acc -> Inter.BinOp (Inter.Thunk (Lambda ("_",simpe e)), Inter.Colon, Inter.Thunk (Inter.Lambda ("_",acc))))
+         (fun e acc -> Inter.BinOp (Inter.Thunk (Inter.Lambda ("_",simpe e)), 
+                                    Inter.Colon, 
+                                    acc))
          l
          Inter.EmptyList
 
@@ -59,8 +65,7 @@ and simpc = function
    | Adapt.String (s,_) ->
        let rep = ref Inter.EmptyList in
        for i = pred (String.length s) downto 0 do
-          rep := Inter.BinOp(Inter.Char s.[i], Inter.Colon, !rep) (* no need to add a thunk 
-                                                                   * because a char is already evaluated *)
+          rep := Inter.BinOp(Inter.Char s.[i], Inter.Colon, !rep)
        done;
        !rep
 

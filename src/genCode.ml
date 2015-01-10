@@ -66,16 +66,7 @@ let putCharGen () =
    pop a0 ++
    pop ra ++
    pop fp ++
-   (* returns zero for IO () *)
-   push a0 ++
-   li a0 8 ++
-   li v0 9 ++
-   syscall ++
-   li t0 0 ++
-   sw t0 areg (4,v0) ++
-   li t0 0 ++
-   sw t0 areg (0,v0) ++
-   pop a0 ++
+   la v0 alab "__null" ++
    jr ra ++
    comment "end putChar")
    ,
