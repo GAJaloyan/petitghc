@@ -19,7 +19,7 @@ let kwd_tbl =
 ]
 
 let identnum = ref 0
-	
+        
 
 let id_or_kwd s = try List.assoc s kwd_tbl with _ -> begin (if(!identnum = 0) then IDENT0 s else IDENT1 s ) end
   
@@ -41,7 +41,7 @@ let caractere = '\'' car '\''
 let chaine = '\"' (car)* '\"'
 
 rule token = parse
-	|'\n'
+  |'\n'
       { identnum := 0; new_line lexbuf; token lexbuf }
   | [' ' '\t']+
       { identnum := 1;  token lexbuf }
@@ -89,25 +89,25 @@ and read_pv = parse
 
 and read_carac = parse
   |carno as c {read_endcarac lexbuf; VCHAR (c)}  
-  | "\\t" {read_endcarac lexbuf; VCHAR ('\t')}
-  | "\\\\" {read_endcarac lexbuf; VCHAR ('\\')}
-  | "\\\"" {read_endcarac lexbuf; VCHAR ('\"')}
-  | "\\n" {read_endcarac lexbuf; VCHAR ('\n')}
-  |eof {raise (Lexing_error "Caractere ouvert non fermé") }
-  | _ {raise (Lexing_error "Caractere illégal") }
+  | "\\t"     {read_endcarac lexbuf; VCHAR ('\t')}
+  | "\\\\"    {read_endcarac lexbuf; VCHAR ('\\')}
+  | "\\\""    {read_endcarac lexbuf; VCHAR ('\"')}
+  | "\\n"     {read_endcarac lexbuf; VCHAR ('\n')}
+  |eof        {raise (Lexing_error "Caractere ouvert non fermé") }
+  | _         {raise (Lexing_error "Caractere illégal") }
 
 and read_endcarac = parse
-	|'\'' {}
-	|_ {raise (Lexing_error "Caractere ouvert mais non fermé") }
-	
+  |'\'' {}
+  |_ {raise (Lexing_error "Caractere ouvert mais non fermé") }
+        
 and read_string = parse
-  |'"' {[]}
+  |'"'        {[]}
   |carno as c {c::(read_string lexbuf)}
-  |"\\t" {'\t'::(read_string lexbuf)}
-  |"\\\\" {'\\'::(read_string lexbuf)}
-  |"\\\"" {'\"'::(read_string lexbuf)}
-  |"\\n" {'\n'::(read_string lexbuf)}
-  | eof {raise (Lexing_error "Chaine ouverte mais non fermée") }
-  | _ {raise (Lexing_error "Caractere illégal dans la chaine") }
+  |"\\t"      {'\t'::(read_string lexbuf)}
+  |"\\\\"     {'\\'::(read_string lexbuf)}
+  |"\\\""     {'\"'::(read_string lexbuf)}
+  |"\\n"      {'\n'::(read_string lexbuf)}
+  | eof       {raise (Lexing_error "Chaine ouverte mais non fermée") }
+  | _         {raise (Lexing_error "Caractere illégal dans la chaine") }
   
 
