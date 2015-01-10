@@ -152,7 +152,7 @@ The main difficulties was the unfamiliarity with the tools and some technic
 details of the assignment.
 
 The lexer / parser was modified a bit to adapt the ast (tranformations like
-def0 a b c = e --> def0 = \ a b c -> e, and storage of the localisation
+def0 a b c = e --> def0 = \ a b c -> e), and storage of the localisation
 in a more precise manner using error.ml.
 
 The typing was mainly implemented using TD 4, we tried to make the error
