@@ -151,6 +151,11 @@ implementation.
 The main difficulties was the unfamiliarity with the tools and some technic
 details of the assignment.
 
+Almost all programs on sas.eleves.ens.fr were outdated, and the code did not 
+compile on older versions of ocaml. We had to recompile ocaml on a ~/bin 
+folder to be able to test our code. The same problem appeared with graphviz 
+dot. 
+
 The lexer / parser was modified a bit to adapt the ast (tranformations like
 def0 a b c = e --> def0 = \ a b c -> e), and storage of the localisation
 in a more precise manner using error.ml.
