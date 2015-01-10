@@ -79,9 +79,9 @@ spim -file outfile.s || exit 1
 echo "tests/exec/print_int1.hs" 
 ./petitghc tests/exec/print_int1.hs      
 spim -file outfile.s || exit 1
-# echo "tests/exec/queue1.hs"
-# ./petitghc tests/exec/queue1.hs
-# spim -file outfile.s || exit 1
+echo "tests/exec/queue1.hs"
+./petitghc tests/exec/queue1.hs
+spim -file outfile.s || exit 1
 echo "tests/exec/bool1.hs" 
 ./petitghc tests/exec/bool1.hs     
 spim -file outfile.s || exit 1
@@ -100,15 +100,15 @@ spim -file outfile.s || exit 1
 echo "tests/exec/mergesort1.hs" 
 ./petitghc tests/exec/mergesort1.hs   
 spim -file outfile.s || exit 1
-# echo "tests/exec/pascal.hs" 
-# ./petitghc tests/exec/pascal.hs    
-# spim -file outfile.s || exit 1
+echo "tests/exec/pascal.hs" 
+./petitghc tests/exec/pascal.hs    
+spim -file outfile.s || exit 1
 echo "tests/exec/print_list1.hs" 
 ./petitghc tests/exec/print_list1.hs     
 spim -file outfile.s || exit 1
-# echo "tests/exec/queue2.hs"
-# ./petitghc tests/exec/queue2.hs
-# spim -file outfile.s || exit 1
+echo "tests/exec/queue2.hs"
+./petitghc tests/exec/queue2.hs
+spim -file outfile.s || exit 1
 echo "tests/exec/call1.hs" 
 ./petitghc tests/exec/call1.hs     
 spim -file outfile.s || exit 1

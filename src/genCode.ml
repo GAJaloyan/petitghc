@@ -376,18 +376,10 @@ let rec compile_expr = function
 
  | C.Edo es ->
      let ces = List.map compile_expr es in
-     List.fold_left (fun acc x -> x ++ acc) nop ces
+     List.fold_right (fun e acc -> compile_expr e ++ acc) es nop
 
  | C.Ereturn ->
-     push a0 ++
-     li a0 8 ++
-     li v0 9 ++
-     syscall ++
-     li t0 0 ++
-     sw t0 areg (4,v0) ++
-     li t0 0 ++
-     sw t0 areg (0,v0) ++
-     pop a0
+     la v0 alab "__null"
 
  | C.Eneg e ->
      let code_e = compile_expr e in
@@ -616,27 +608,9 @@ let rec compile_expr = function
      comment "end colon"
 
  | C.Etrue ->
-     (*push a0 ++
-     li a0 8 ++
-     li v0 9 ++
-     syscall ++
-     li t0 1 ++
-     sw t0 areg (4,v0) ++
-     li t0 0 ++
-     sw t0 areg (0,v0) ++
-     pop a0*)
      la v0 alab "__true"
 
  | C.Efalse ->
-     (*push a0 ++
-     li a0 8 ++
-     li v0 9 ++
-     syscall ++
-     li t0 0 ++
-     sw t0 areg (4,v0) ++
-     li t0 0 ++
-     sw t0 areg (0,v0) ++
-     pop a0 *)
      la v0 alab "__null"
 
  | C.Eint n ->
@@ -662,15 +636,6 @@ let rec compile_expr = function
      pop a0
 
  | C.EemptyList ->
-     (*push a0 ++
-     li a0 8 ++
-     li v0 9 ++
-     syscall ++
-     li t0 0 ++
-     sw t0 areg (4,v0) ++
-     li t0 0 ++
-     sw t0 areg (0,v0) ++
-     pop a0*)
      la v0 alab "__null"
 
 and compile_decl (code,data) = function

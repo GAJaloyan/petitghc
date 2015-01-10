@@ -44,7 +44,8 @@ let rec freevars = function
        List.fold_left
          SSet.union
          SSet.empty
-         (List.map freevars es) | Inter.Id i -> SSet.singleton i
+         (List.map freevars es) 
+   | Inter.Id i -> SSet.singleton i
    | _ -> SSet.empty
 
 let closureNb = ref 0
@@ -104,8 +105,8 @@ let rec transforme env next = function
        let bindLoc = ref next in
        let env' = List.fold_left
          (fun acc (x,_) -> 
-            let s = SMap.add x (C.Vlocal (- !bindLoc)) acc in
             bindLoc := !bindLoc + 4;
+            let s = SMap.add x (C.Vlocal (- !bindLoc)) acc in
             s)
          env
          bs in
@@ -115,7 +116,7 @@ let rec transforme env next = function
          (fun (l,fpmax) (x,e) -> 
              let e,fpmax' = transforme env' nextFree e in
              bindLoc := !bindLoc + 4; 
-             ((- (!bindLoc-4), e)::l, max fpmax fpmax')
+             ((- !bindLoc, e)::l, max fpmax fpmax') (* XXX (!bindLoc - 4) *)
          )
          ([],nextFree) bs in
        let e',fpmax2 = transforme env' nextFree e in
@@ -128,18 +129,19 @@ let rec transforme env next = function
    | I.Case (e1, e2, i1, i2, e3) ->
        let e1',fpmax1 = transforme env next e1 in
        let e2',fpmax2 = transforme env next e2 in
-       let env' = SMap.add i1 (C.Vlocal (-next))
-                    (SMap.add i2 (C.Vlocal (-next-4)) env) in
+       let env' = SMap.add i1 (C.Vlocal (-next-4))
+                    (SMap.add i2 (C.Vlocal (-next-8)) env) in
        let e3',fpmax3 = transforme env' (next+8) e3 in
-       C.Ecase (e1', e2', -next, -next-4, e3')
+       C.Ecase (e1', e2', -next-4, -next-8, e3')
        , max (max fpmax1 fpmax2) fpmax3
    | I.Do es ->
-       let l,fpmax = List.fold_left
-         (fun (l,fpmax) e -> 
+       let l,fpmax = List.fold_right
+         (fun e (l,fpmax) -> 
             let e,fpmax' = transforme env next e in
             (e::l, max fpmax fpmax'))
+         es
          ([],next)
-         es in
+         in
        C.Edo l, fpmax 
    | I.Return ->
        C.Ereturn, next

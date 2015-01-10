@@ -1,3 +1,11 @@
+print_list l =
+  case l of {
+    [] -> return ();
+    x : xs -> return ()
+    }
 
-main = if(True || (if(div 1 0 == div 1 0) then True else True)) then putChar 'v' else putChar 'f'
-
+main = let s = [0] in
+  do {
+    print_list s;
+    print_list s;
+  }

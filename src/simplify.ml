@@ -47,7 +47,7 @@ and simpse = function
    | Adapt.Cst (c,_) -> simpc c
    | Adapt.List (l,_) ->
        List.fold_right 
-         (fun e acc -> Inter.BinOp (simpe e, Inter.Colon, Inter.Thunk (Inter.Lambda ("_",acc))))
+         (fun e acc -> Inter.BinOp (Inter.Thunk (Lambda ("_",simpe e)), Inter.Colon, Inter.Thunk (Inter.Lambda ("_",acc))))
          l
          Inter.EmptyList
 
