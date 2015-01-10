@@ -1,5 +1,5 @@
 all:
-	ocamlbuild main.native | grep -v -i 'is defined in both types'
+	ocamlbuild -cflags "-w -3-30",-rectypes main.native
 	mv main.native petitghc
 
 .PHONY: clean
