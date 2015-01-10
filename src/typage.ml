@@ -410,12 +410,12 @@ and wexpr env (expr : Ast.expr) : texpr =
     let te2 = (wexpr env e2) in let t2 = te2.typ in
     let v = Tvar(V.create ()) in 
     begin
-      (try (unify t1 (Tlist(v))) with |_ -> raise (Typing_error (e1.loc,"case e1 of : e1 is of type "^(typtostr t1)^" while type 'a list was expected.")));
+      (try (unify t1 (Tlist(v))) with |_ -> raise (Typing_error (e1.loc,"case e1 of : e1 has type "^(typtostr t1)^" while type 'a list was expected.")));
       let env = (add false x1 (v) env) in
       let env = (add false x2 (Tlist(v)) env) in
       let te3 = wexpr env e3 in let t3 = te3.typ in
       begin
-        (try (unify t2 t3) with |_ -> raise (Typing_error (localisation,"case _ of {_ -> e2; _ -> e3} : e2 has type " ^(typtostr t2)^ " and e3 has type "^(typtostr t3)^" :unable to unify both types.")));
+        (try (unify t2 t3) with |_ -> raise (Typing_error (localisation,"case _ of {_ -> e2; _ -> e3} : e2 has type " ^(typtostr t2)^ " and e3 has type "^(typtostr t3)^" : unable to unify both types.")));
         {desc=Ecase(te1,te2,x1,x2,te3);typ=t2}
       end
     end
@@ -427,75 +427,75 @@ and wexpr env (expr : Ast.expr) : texpr =
         match operateur.descb with
         |And -> 
         begin 
-          (try (unify tg Tbool) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 && _ avec Tbool.")));
-          (try (unify td Tbool) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression _ && e2 avec Tbool.")));
+          (try (unify tg Tbool) with |_ -> raise (Typing_error (localisation,"e1 && _: e1 has type "^(typtostr tg)^" while type bool was expected.")));
+          (try (unify td Tbool) with |_ -> raise (Typing_error (localisation,"_ && e2: e2 has type "^(typtostr td)^" while type bool was expected.")));
           {desc=Ebinop(({tdescb=And;typ=Tbool}:tbinop),tgauche,tdroite);typ=Tbool}
         end
         |Or -> 
         begin 
-          (try (unify tg Tbool) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 || _ avec Tbool.")));
-          (try (unify td Tbool) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression _ || e2 avec Tbool.")));
+          (try (unify tg Tbool) with |_ -> raise (Typing_error (localisation,"e1 || _: e1 has type "^(typtostr tg)^" while type bool was expected.")));
+          (try (unify td Tbool) with |_ -> raise (Typing_error (localisation,"_ || e2: e2 has type "^(typtostr td)^" while type bool was expected.")));
           {desc=Ebinop({tdescb=Or;typ=Tbool},tgauche,tdroite);typ=Tbool}
         end
         |Infe ->
         begin 
-          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 <= _ avec Tint.")));
-          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression _ <= e2 avec Tint.")));
+          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"e1 <= _: e1 has type "^(typtostr tg)^" while type int was expected.")));
+          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"_ <= e2: e2 has type "^(typtostr td)^" while type int was expected.")));
           {desc=Ebinop({tdescb=Infe;typ=Tbool},tgauche,tdroite);typ=Tbool}
         end
         |Supe ->
         begin 
-          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 >= _ avec Tint.")));
-          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression _ >= e2 avec Tint.")));
+          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"e1 >= _: e1 has type "^(typtostr tg)^" while type int was expected.")));
+          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"_ >= e2: e2 has type "^(typtostr td)^" while type int was expected.")));
           {desc=Ebinop({tdescb=Supe;typ=Tbool},tgauche,tdroite);typ=Tbool}
         end
         |Infs ->
         begin 
-          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 < _ avec Tint.")));
-          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression _ < e2 avec Tint.")));
+          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"e1 < _: e1 has type "^(typtostr tg)^" while type int was expected.")));
+          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"_ < e2: e2 has type "^(typtostr td)^" while type int was expected.")));
           {desc=Ebinop({tdescb=Infs;typ=Tbool},tgauche,tdroite);typ=Tbool}
         end
         |Sups ->
         begin 
-          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 > _ avec Tint.")));
-          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression _ > e2 avec Tint.")));
+          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"e1 > _: e1 has type "^(typtostr tg)^" while type int was expected.")));
+          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"_ > e2: e2 has type "^(typtostr td)^" while type int was expected.")));
           {desc=Ebinop({tdescb=Sups;typ=Tbool},tgauche,tdroite);typ=Tbool}
         end
         |Eq ->
         begin 
-          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 == _ avec Tint.")));
-          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression _ == e2 avec Tint.")));
+          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"e1 == _: e1 has type "^(typtostr tg)^" while type int was expected.")));
+          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"_ == e2: e2 has type "^(typtostr td)^" while type int was expected.")));
           {desc=Ebinop({tdescb=Eq;typ=Tbool},tgauche,tdroite);typ=Tbool}
         end
         |Uneq ->
         begin 
-          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 /= _ avec Tint.")));
-          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression _ /= e2 avec Tint.")));
+          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"e1 /= _: e1 has type "^(typtostr tg)^" while type int was expected.")));
+          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"_ /= e2: e2 has type "^(typtostr td)^" while type int was expected.")));
           {desc=Ebinop({tdescb=Uneq;typ=Tbool},tgauche,tdroite);typ=Tbool}
         end
         
         |Add ->
         begin 
-          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 + _ avec Tint.")));
-          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression _ + e2 avec Tint.")));
+          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"e1 + _: e1 has type "^(typtostr tg)^" while type int was expected.")));
+          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"_ + e2: e2 has type "^(typtostr td)^" while type int was expected.")));
           {desc=Ebinop({tdescb=Add;typ=Tint},tgauche,tdroite);typ=Tint}
         end
         |Sub ->
         begin 
-          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 - _ avec Tint.")));
-          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression _ - e2 avec Tint.")));
+          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"e1 - _: e1 has type "^(typtostr tg)^" while type int was expected.")));
+          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"_ - e2: e2 has type "^(typtostr td)^" while type int was expected.")));
           {desc=Ebinop({tdescb=Sub;typ=Tint},tgauche,tdroite);typ=Tint}
         end
         |Mul ->
         begin 
-          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 * _ avec Tint.")));
-          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression _ * e2 avec Tint.")));
+          (try (unify tg Tint) with |_ -> raise (Typing_error (localisation,"e1 * _: e1 has type "^(typtostr tg)^" while type int was expected.")));
+          (try (unify td Tint) with |_ -> raise (Typing_error (localisation,"_ * e2: e2 has type "^(typtostr td)^" while type int was expected.")));
           {desc=Ebinop({tdescb=Mul;typ=Tint},tgauche,tdroite);typ=Tint}
         end
         
         |Head ->
         begin 
-          (try (unify (Tlist(tg)) td) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression e1 : e2 ---- [e1].typ != e2.typ")));
+          (try (unify (Tlist(tg)) td) with |_ -> raise (Typing_error (localisation,"e1 : e2 ---- [e1] has type "^(typtostr (Tlist(tg)))^ " while e2 has type "^(typtostr td)^" : unable to unify both types.")));
           {desc=Ebinop({tdescb=Head;typ=td},tgauche,tdroite);typ=td}
         end
         
@@ -505,10 +505,10 @@ and wexpr env (expr : Ast.expr) : texpr =
       let tsivrai = wexpr env sivrai in let t1= tsivrai.typ in
       let tsifaux = wexpr env sifaux in let t2= tsifaux.typ in
       begin
-        (try (unify t1 t2) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier la structure If(_,e1,e2).")));
+        (try (unify t1 t2) with |_ -> raise (Typing_error (localisation,"if(_,e1,e2): e1 has type "^(typtostr t1)^" while e2 has type "^(typtostr t2)^" : unable to unify both types.")));
         let tcond = wexpr env condition in let tc = tcond.typ in 
         begin
-          try (unify tc Tbool) with |_ -> raise (Typing_error (localisation,"Impossible d'unifier l'expression If(cond, _, _) avec Tunit.")) 
+          try (unify tc Tbool) with |_ -> raise (Typing_error (localisation,"if(cond, _, _): cond has type "^(typtostr tc)^" while Tunit was expected.")) 
         end;
         
         {desc=Eif(tcond, tsivrai, tsifaux); typ = t1}
@@ -551,16 +551,16 @@ let wverifierliste (l:Ast.def0 list) env =
   |{desc = a; loc = llinutile}::b -> let (nom, args, corps) = (a.gauche0,a.formals0,a.body0) in let v = Tvar (V.create ()) in
            let env = add false nom v env in 
         begin
-          (if (SS.mem nom !dejaVu) then raise (Typing_error (llinutile,"Déclaration globale \""^ nom ^"\" définie précédemment dans le fichier." )) 
+          (if (SS.mem nom !dejaVu) then raise (Typing_error (llinutile,"global declaration \""^ nom ^"\" already defined previously." )) 
           else  dejaVu := (SS.add nom !dejaVu));
           
           (if((compare nom "main") = 0) then mainpresent := true else () );
           
           
-          (if((compare nom "div") = 0) then raise (Typing_error (llinutile,"Nom de fonction illegal \"div\".")) else () );
-          (if((compare nom "rem") = 0) then raise (Typing_error (llinutile,"Nom de fonction illegal \"rem\".")) else () );
-          (if((compare nom "putChar") = 0) then raise (Typing_error (llinutile,"Nom de fonction illegal \"putChar\".")) else () );
-          (if((compare nom "error") = 0) then raise (Typing_error (llinutile,"Nom de fonction illegal \"error\".")) else () );
+          (if((compare nom "div") = 0) then raise (Typing_error (llinutile,"illegal function name \"div\".")) else () );
+          (if((compare nom "rem") = 0) then raise (Typing_error (llinutile,"illegal function name \"rem\".")) else () );
+          (if((compare nom "putChar") = 0) then raise (Typing_error (llinutile,"illegal function name \"putChar\".")) else () );
+          (if((compare nom "error") = 0) then raise (Typing_error (llinutile,"illegal function name \"error\".")) else () );
           
           aux b env
         end
@@ -571,7 +571,7 @@ let testerParametresFonction liste loca =
     let rec aux l =
       match l with
       |[] -> ()
-      |a::b -> if (SS.mem a !dejaVu) then raise (Typing_error (loca,"Deux paramètres de cette fonction ont même nom : \""^ a ^"\"." ))
+      |a::b -> if (SS.mem a !dejaVu) then raise (Typing_error (loca,"parameter \""^ a ^"\" is defined several times." ))
               else 
                 begin
                   dejaVu := (SS.add a !dejaVu);
@@ -593,7 +593,7 @@ let rec wtyperliste (l:Ast.def0 list) env : (tdef0 list * env) =
               begin 
                 (if((compare nom "main") = 0) then 
                       try (unify tetetyp Tunit)
-                      with |_ -> raise (Typing_error (localisation,"Le main ne peut être unifié avec le type Tunit."))
+                      with |_ -> raise (Typing_error (localisation,"main has type "^(typtostr tetetyp)^" while type Tunit was expected."))
                  else () );
                 ({desc=teted; typ=tt}:tdef0)::reste,env 
               end
@@ -617,7 +617,7 @@ let wprogram env ({desc=p;loc=llinutile}:Ast.program) = match p.defs with
   |liste(*Ast.def0 list*) -> let env = wverifierliste liste env in 
     let tliste,env = (wtyperliste liste env) in
     if(!mainpresent = false) then 
-       raise (Typing_error (llinutile,"Le fichier n'a pas de main."))
+       raise (Typing_error (llinutile,"the file does not have a main declaration (no entry point)."))
     else
     {desc = {defs = tliste}; typ = Tunit}
   
