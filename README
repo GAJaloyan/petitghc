@@ -1,4 +1,4 @@
-This is my compilation project for the course on compilation at the ENS Paris. The goal
+This is our compilation project for the course on compilation at the ENS Paris. The goal
 is to make a compiler for a portion of haskell, called Petit Haskell, producted in MIPS. It
 contains only integers and lists and is 100% compatible with Haskell.
 
