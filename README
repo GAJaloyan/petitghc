@@ -66,3 +66,23 @@ always included in the object code. They are associated with 4
 variables, each one containing an empty closure to these functions.
 Next, the stack contains has many variables as there are global
 definitions.
+
+
+
+===========================================
+Usage : 
+make
+./petitghc [options] [-o outputfile.s] inputfile.hs
+
+Options :
+--parse-only : parses the inputfile, then prints a graphviz code of the constructed ast on stdout, then exits.
+--type-only : types the inputfile, then prints a graphviz code of the typed ast on stdout, then exits.
+--simplify-only : simplifies the ast, then prints a graphviz code of the simplified ast on stdout, then exits.
+-o : the output file if specified, else set to inputfile.s
+
+Needed :
+ocaml version 4.02.1
+dot - graphviz version 2.36.0
+rsync version 3.1.0
+
+
