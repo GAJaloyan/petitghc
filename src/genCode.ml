@@ -401,7 +401,7 @@ let rec compile_expr = function
      pop a0 ++
      pop a1
 
- | C.EbinOp (e1,o,e2) when o == C.Or -> 
+ | C.EbinOp (e1,C.Or,e2) -> 
      let code_e1 = compile_expr e1 in
      let code_e2 = compile_expr e2 in
      let done_op = getNextLabel () in
@@ -416,8 +416,8 @@ let rec compile_expr = function
      move t0 a0 ++
      pop a1 ++
      pop a0 ++
-     lw t1 areg (4,t0) ++ (* t0 contains a boolean *)
-     bnez t1 done_op ++
+     lw t0 areg (4,t0) ++ (* t0 contains a boolean *)
+     bnez t0 done_op ++
 
      push t0 ++ (* result on top of the stack *)
      code_e2 ++
@@ -441,20 +441,7 @@ let rec compile_expr = function
      syscall ++
      pop a0 ++
 
-     (match o with
-     | C.Plus      -> add t0 t1 oreg t2
-     | C.Minus     -> sub t0 t1 oreg t2
-     | C.Time      -> mul t0 t1 oreg t2
-     | C.LowerEq   -> sle t0 t1 t2
-     | C.GreaterEq -> sge t0 t1 t2
-     | C.Greater   -> sgt t0 t1 t2
-     | C.Lower     -> slt t0 t1 t2
-     | C.Unequal   -> sne t0 t1 t2
-     | C.Equal     -> seq t0 t1 t2
-     | C.And       -> and_  t0 t1 t2
-     | C.Or        -> or_ t0 t1 t2 
-     | C.Colon     -> failwith "impossible"
-     ) ++
+     or_ t0 t1 t2 ++
 
      label done_op ++
      sw t0 areg (4,v0) ++
@@ -463,12 +450,12 @@ let rec compile_expr = function
      pop ra ++
      comment "end EbinOp"
 
- | C.EbinOp (e1,o,e2) when o == C.And -> 
+ | C.EbinOp (e1,C.And,e2) -> 
      let code_e1 = compile_expr e1 in
      let code_e2 = compile_expr e2 in
      let done_op = getNextLabel () in
 
-     comment "begin EbinOp" ++
+     comment "begin and" ++
      push ra ++
      code_e1 ++
      push a0 ++
@@ -478,8 +465,8 @@ let rec compile_expr = function
      move t0 a0 ++
      pop a1 ++
      pop a0 ++
-     lw t1 areg (4,t0) ++ (* t0 contains a boolean *)
-     beqz t1 done_op ++
+     lw t0 areg (4,t0) ++ (* t0 contains a boolean *)
+     beqz t0 done_op ++
 
      push t0 ++ (* result on top of the stack *)
      code_e2 ++
@@ -503,27 +490,14 @@ let rec compile_expr = function
      syscall ++
      pop a0 ++
 
-     (match o with
-     | C.Plus      -> add t0 t1 oreg t2
-     | C.Minus     -> sub t0 t1 oreg t2
-     | C.Time      -> mul t0 t1 oreg t2
-     | C.LowerEq   -> sle t0 t1 t2
-     | C.GreaterEq -> sge t0 t1 t2
-     | C.Greater   -> sgt t0 t1 t2
-     | C.Lower     -> slt t0 t1 t2
-     | C.Unequal   -> sne t0 t1 t2
-     | C.Equal     -> seq t0 t1 t2
-     | C.And       -> and_  t0 t1 t2
-     | C.Or        -> or_ t0 t1 t2 
-     | C.Colon     -> failwith "impossible"
-     ) ++
+     and_  t0 t1 t2 ++
 
      label done_op ++
      sw t0 areg (4,v0) ++
      li t0 0 ++
      sw t0 areg (0,v0) ++
      pop ra ++
-     comment "end EbinOp"
+     comment "end and"
 
  | C.EbinOp (e1,o,e2) when o <> C.Colon -> 
      let code_e1 = compile_expr e1 in

@@ -14,7 +14,7 @@ let options =
   ["--parse-only", Arg.Set parse_only,
    "  Pour ne faire uniquement que la phase d'analyse syntaxique"; "--type-only", Arg.Set type_only,
    "  Pour s'arrêter après le typage"; "-o", Arg.String (set_file ofile), 
-   "<file>  Pour indiquer le mom du fichier de sortie"]
+   "-o <file>  Pour indiquer le mom du fichier de sortie"]
 
 let usage = "usage: petitghc [option] file.hs"
 
