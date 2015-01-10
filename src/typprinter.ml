@@ -46,35 +46,35 @@ let identifier_operande op =
 
 let tprint_const pere ({desc=const;typ=ttt}:Typage.tconst) =
   match const with
-	|Ctrue -> let s = (string_of_int !i) in begin
+  | Ctrue -> let s = (string_of_int !i) in begin
     i:= !i+1;
     Format.printf "%s [label=\"Ctrue\ntyp:" s;
     printletype ttt;
     Format.printf "\",color=skyblue1,style=filled]\n";
     Format.printf "%s -> %s\n" pere s
     end
-	|Cfalse -> let s = (string_of_int !i) in begin
+  | Cfalse -> let s = (string_of_int !i) in begin
     i:= !i+1;
     Format.printf "%s [label=\"Cfalse\ntyp:" s;
     printletype ttt;
     Format.printf "\",color=skyblue1,style=filled]\n";
     Format.printf "%s -> %s\n" pere s
     end
-	|Cint(a) ->let s = (string_of_int !i) in begin
+  | Cint(a) ->let s = (string_of_int !i) in begin
     i:= !i+1;
     Format.printf "%s [label=\"Cint %d\ntyp:" s a;
     printletype ttt;
     Format.printf "\",color=skyblue1,style=filled]\n";
     Format.printf "%s -> %s\n" pere s
     end
-	|Cchar(b) ->let s = (string_of_int !i) in begin
+  | Cchar(b) ->let s = (string_of_int !i) in begin
     i:= !i+1;
     Format.printf "%s [label=\"Cchar '%c'\ntyp:" s b;
     printletype ttt;
     Format.printf "\",color=skyblue1,style=filled]\n";
     Format.printf "%s -> %s\n" pere s
     end
-	|Cstring(liste) -> let s = (string_of_int !i) in begin
+  | Cstring(liste) -> let s = (string_of_int !i) in begin
     i:= !i+1;
     Format.printf "%s [label=\"Cstring \\\"%s\\\"\ntyp:" s (string_implode liste);
     printletype ttt;
@@ -129,7 +129,7 @@ and tprint_block pere liste =
 
 and tprint_expr pere ({desc=e; typ=ttt}:Typage.texpr) =
   match e with
-  |Eatomiclist(li) -> let s = (string_of_int !i) in begin
+  | Eatomiclist(li) -> let s = (string_of_int !i) in begin
     i:= !i+1;
     Format.printf "%s [label=\"Eatomiclist\ntyp:" s;
     printletype ttt;
@@ -137,7 +137,7 @@ and tprint_expr pere ({desc=e; typ=ttt}:Typage.texpr) =
     Format.printf "%s -> %s\n" pere s;
     tprint_atomiclist s li
     end
-  | Elambda({desc={formalslambda=liste;	bodylambda=expr;};typ=ttbis}) -> let s = (string_of_int !i) in begin
+  | Elambda({desc={formalslambda=liste; bodylambda=expr;};typ=ttbis}) -> let s = (string_of_int !i) in begin
     i:= !i+1;
     Format.printf "%s [label=\"Elambda\ntyp:" s;
     printletype ttbis;
@@ -181,7 +181,7 @@ and tprint_expr pere ({desc=e; typ=ttt}:Typage.texpr) =
     Format.printf "\",color=green,style=filled]\n";
     Format.printf "%s -> %s\n" pere s;
     tprint_expr s expr;
-      let s2 = (string_of_int !i) in begin
+    let s2 = (string_of_int !i) in begin
       i:= !i+1;
       Format.printf "%s [label=\"[]\",color=gold,style=filled]\n" s2;
       Format.printf "%s -> %s\n" s s2;
@@ -192,7 +192,6 @@ and tprint_expr pere ({desc=e; typ=ttt}:Typage.texpr) =
       Format.printf "%s [label=\"%s:%s\",color=gold,style=filled]\n" s2 id1 id2;
       Format.printf "%s -> %s\n" s s2;
       tprint_expr s2 expr2;end
-    
     end
   | Edo(liste) -> let s = (string_of_int !i) in begin
     i:= !i+1;
@@ -223,29 +222,31 @@ and tprint_formals pere f =
 
 and tprint_deflist pere (liste:Typage.tdef list) =
   match liste with
-  |[] -> ()
-  |hh::b -> let ({desc={gauche = a; formals = f; body = e};typ=ttt}:Typage.tdef) = hh in begin let s = (string_of_int !i)in 
-  i := !i +1;
-  Format.printf "%s [label=\"%s\ntyp:" s a;
-  printletype ttt;
-  Format.printf "\",color=crimson, style=filled]\n";
-  Format.printf "%s -> %s\n" pere s;
-  tprint_formals s f;
-  tprint_expr s e;
-  tprint_deflist pere b
-  end
+  | [] -> ()
+  | hh::b -> 
+     let ({desc={gauche = a; formals = f; body = e};typ=ttt}:Typage.tdef) = hh 
+     in begin let s = (string_of_int !i)in 
+        i := !i +1;
+        Format.printf "%s [label=\"%s\ntyp:" s a;
+        printletype ttt;
+        Format.printf "\",color=crimson, style=filled]\n";
+        Format.printf "%s -> %s\n" pere s;
+        tprint_formals s f;
+        tprint_expr s e;
+        tprint_deflist pere b
+     end
 
 
 
 let tprint_def0 ({desc=description;typ=ttt}:Typage.tdef0) =
   let {gauche0 = a; formals0 = f; body0 = e} = description in
   begin let s = (string_of_int !i)in 
-  i := !i +1;
-  Format.printf "%s [label=\"%s\ntyp: " s a; 
-  printletype ttt;
-  Format.printf "\",color=red, style=filled]\n";
-  tprint_formals s f;
-  tprint_expr s e;
+    i := !i +1;
+    Format.printf "%s [label=\"%s\ntyp: " s a; 
+    printletype ttt;
+    Format.printf "\",color=red, style=filled]\n";
+    tprint_formals s f;
+    tprint_expr s e;
   end
 
 let rec tprint_prog prog =
@@ -258,10 +259,10 @@ let rec tprint_prog prog =
 
 let tprint_fichier {desc=description;typ=ttt} =
   let {defs = prog} = description in
-  begin
-  Format.printf "digraph G {\nnode [shape=box]\n";
-  tprint_prog prog;
-  Format.printf "\n}\n";
+    begin
+    Format.printf "digraph G {\nnode [shape=box]\n";
+    tprint_prog prog;
+    Format.printf "\n}\n";
   end
   
 
