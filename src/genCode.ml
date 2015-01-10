@@ -193,6 +193,10 @@ let baseFunctions () =
    (nop,nop)
    [forceGen; putCharGen; errorGen; opGen "div"; opGen "rem"; constGen]
 
+let is_arith = function
+ | C.Plus | C.Minus | C.Time -> true
+ | _ -> false
+
 let rec compile_expr = function
  | C.Evar v -> 
      begin match v with
@@ -464,7 +468,8 @@ let rec compile_expr = function
      pop ra ++
      comment "end and"
 
- | C.EbinOp (e1,o,e2) -> 
+ (* compiles arithmetic operations *)
+ | C.EbinOp (e1,o,e2) when is_arith o -> 
      let code_e1 = compile_expr e1 in
      let code_e2 = compile_expr e2 in
 
@@ -505,21 +510,68 @@ let rec compile_expr = function
      | C.Plus      -> add t0 t1 oreg t2
      | C.Minus     -> sub t0 t1 oreg t2
      | C.Time      -> mul t0 t1 oreg t2
-     | C.LowerEq   -> sle t0 t1 t2
-     | C.GreaterEq -> sge t0 t1 t2
-     | C.Greater   -> sgt t0 t1 t2
-     | C.Lower     -> slt t0 t1 t2
-     | C.Unequal   -> sne t0 t1 t2
-     | C.Equal     -> seq t0 t1 t2
-     | C.And       -> and_  t0 t1 t2
-     | C.Or        -> or_ t0 t1 t2 
-     | C.Colon     -> failwith "impossible"
+     | _           -> failwith "impossible"
      ) ++
 
      sw t0 areg (4,v0) ++
      li t0 0 ++
      sw t0 areg (0,v0) ++
      pop ra ++
+     comment "end EbinOp"
+
+ (* compiles booleans operations *)
+ | C.EbinOp (e1,o,e2) -> 
+     let code_e1 = compile_expr e1
+     and code_e2 = compile_expr e2
+     and return_false = getNextLabel ()
+     and end_op = getNextLabel () in
+
+     comment "begin EbinOp" ++
+     push ra ++
+     code_e1 ++
+     push a0 ++
+     push a1 ++
+     move a0 v0 ++
+     jal force ++
+     move t0 a0 ++
+     pop a1 ++
+     pop a0 ++
+     push t0 ++ (* result on top of the stack *)
+
+     code_e2 ++
+     push a0 ++
+     push a1 ++
+     move a0 v0 ++
+     jal force ++
+     move t0 a0 ++
+     pop a1 ++
+     pop a0 ++
+     push t0 ++ (* second operand on top of the stack *)
+     
+     pop t3 ++ (* second operand *)
+     lw t2 areg (4,t3) ++
+     pop t3 ++ (* first operand *)
+     lw t1 areg (4,t3) ++
+
+     (match o with
+     | C.LowerEq   -> sle t0 t1 t2
+     | C.GreaterEq -> sge t0 t1 t2
+     | C.Greater   -> sgt t0 t1 t2
+     | C.Lower     -> slt t0 t1 t2
+     | C.Unequal   -> sne t0 t1 t2
+     | C.Equal     -> seq t0 t1 t2
+     | _           -> failwith "impossible"
+     ) ++
+
+     beqz t0 return_false ++
+     la v0 alab "__true" ++
+     j end_op ++
+
+     label return_false ++
+     la v0 alab "__null" ++
+     label end_op ++
+     pop ra ++
+
      comment "end EbinOp"
 
  | C.Etrue ->
