@@ -77,7 +77,7 @@ let () =
         eprintf "syntax error@.";
         exit 1
         
-          | Typage.Typing_error (c,s) ->
+    | Typage.Typing_error (c,s) ->
         (* Erreur de type : on récupère les coordonnées dans c:loc*)
         localisationAffiche (c);
         eprintf "typing error: %s@." s;
