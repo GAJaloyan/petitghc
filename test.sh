@@ -15,25 +15,25 @@ make
 # ./petitghc --parse-only tests/syntax/bad/testfile-lexical-1.hs  
 # ./petitghc --parse-only tests/syntax/bad/testfile-string_literal-2.hs
 
-# echo "typing/good"
-# ./petitghc --type-only tests/typing/good/testfile-arith-1.hs
-# ./petitghc --type-only tests/typing/good/testfile-arith-2.hs
-# ./petitghc --type-only tests/typing/good/testfile-error-1.hs
-# ./petitghc --type-only tests/typing/good/testfile-error-2.hs
-# ./petitghc --type-only tests/typing/good/testfile-error-3.hs
-# ./petitghc --type-only tests/typing/good/testfile-hindley_milner-1.hs
-# ./petitghc --type-only tests/typing/good/testfile-shadowing-1.hs
-# 
-# echo "typing/bad"
-# ./petitghc --type-only tests/typing/bad/testfile-arith-1.hs
-# ./petitghc --type-only tests/typing/bad/testfile-duplicate-2.hs
-# ./petitghc --type-only tests/typing/bad/testfile-duplicate-4.hs
-# ./petitghc --type-only tests/typing/bad/testfile-error-1.hs
-# ./petitghc --type-only tests/typing/bad/testfile-main-2.hs
-# ./petitghc --type-only tests/typing/bad/testfile-duplicate-1.hs
-# ./petitghc --type-only tests/typing/bad/testfile-duplicate-3.hs
-# ./petitghc --type-only tests/typing/bad/testfile-duplicate-5.hs
-# ./petitghc --type-only tests/typing/bad/testfile-main-1.hs
+echo "typing/good"
+./petitghc --type-only tests/typing/good/testfile-arith-1.hs
+./petitghc --type-only tests/typing/good/testfile-arith-2.hs
+./petitghc --type-only tests/typing/good/testfile-error-1.hs
+./petitghc --type-only tests/typing/good/testfile-error-2.hs
+./petitghc --type-only tests/typing/good/testfile-error-3.hs
+./petitghc --type-only tests/typing/good/testfile-hindley_milner-1.hs
+./petitghc --type-only tests/typing/good/testfile-shadowing-1.hs
+
+echo "typing/bad"
+./petitghc --type-only tests/typing/bad/testfile-arith-1.hs
+./petitghc --type-only tests/typing/bad/testfile-duplicate-2.hs
+./petitghc --type-only tests/typing/bad/testfile-duplicate-4.hs
+./petitghc --type-only tests/typing/bad/testfile-error-1.hs
+./petitghc --type-only tests/typing/bad/testfile-main-2.hs
+./petitghc --type-only tests/typing/bad/testfile-duplicate-1.hs
+./petitghc --type-only tests/typing/bad/testfile-duplicate-3.hs
+./petitghc --type-only tests/typing/bad/testfile-duplicate-5.hs
+./petitghc --type-only tests/typing/bad/testfile-main-1.hs
 
 # echo "exec"
 # echo "tests/exec/append1.hs"  
