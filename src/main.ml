@@ -2,6 +2,7 @@ open Format
 
 let parse_only = ref false
 let type_only = ref false
+let simplify_only = ref false
 
 (* Noms des fichiers source et cible *)
 let ifile = ref ""
@@ -13,7 +14,8 @@ let set_file f s = f := s
 let options =
   ["--parse-only", Arg.Set parse_only,
    "  Pour ne faire uniquement que la phase d'analyse syntaxique"; "--type-only", Arg.Set type_only,
-   "  Pour s'arrêter après le typage"; "-o", Arg.String (set_file ofile), 
+   "  Pour s'arrêter après le typage"; "--simplify-only", Arg.Set simplify_only,
+   "  Pour s'arrêter après la simplification"; "-o", Arg.String (set_file ofile), 
    "-o <file>  Pour indiquer le mom du fichier de sortie"]
 
 let usage = "usage: petitghc [option] file.hs"
@@ -45,16 +47,18 @@ let () =
     close_in f;
     
     (* On s'arrête ici si on ne veut faire que le parsing *)
-    if !parse_only then begin  (*Printer.print_fichier p;*) exit 0; end;
+    if !parse_only then begin  Printer.print_fichier p; exit 0; end;
 
     let tp = Typage.typeof p in
     
-    if !type_only then begin (*Typprinter.tprint_fichier tp;*) exit 0; end;
+    if !type_only then begin Typprinter.tprint_fichier tp; exit 0; end;
     
-    let ap = Adapt.adapter p in
+    let ap = (Adapt.adapter p) in
       begin
         (*Adapt.print_file ap;*)
-        let _ = GenCode.compile_program (Make_closures.transform (Simplify.simplify (ap))) !ofile in
+        let sp = Simplify.simplify (ap) in
+        if !simplify_only then begin Simpleprinter.print_fichier sp ; exit 0; end;
+        let _ = GenCode.compile_program (Make_closures.transform (sp)) !ofile in
           exit 0
       end
     
