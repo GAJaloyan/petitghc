@@ -12,6 +12,8 @@ type location =
 
 let error_prompt = ">"
 
+let ifile = ref ""
+
 (** Print [n] times char [c] on [oc]. *)
 let prints_n_chars ff n c = for i = 1 to n do Format.pp_print_char ff c done
 
@@ -57,6 +59,9 @@ let skip_lines n ic =
     done
     with End_of_file -> ()
 
+let set_file chaine = 
+    ifile := chaine
+
 let print_location ff (Loc(p1,p2)) =
     let n1 = p1.pos_cnum - p1.pos_bol in (* character number *)
     let n2 = p2.pos_cnum - p2.pos_bol in
@@ -66,7 +71,7 @@ let print_location ff (Loc(p1,p2)) =
     let l2 = p2.pos_lnum in
     let lp1 = p1.pos_bol in (* line position *)
     let lp2 = p2.pos_bol in
-    let f1 = p1.pos_fname in (* file name *)
+    let f1 = !ifile in (* file name *)
     if l2 > l1 then
         Format.fprintf ff "File \"%s\", line %d-%d, characters %d-%d:\n" f1 l1 l2 n1 n2
     else
@@ -99,4 +104,4 @@ let print_location ff (Loc(p1,p2)) =
             copy_chunk lp2 np2 ic ff; (* copy interesting begining of l2 *)
         )
     with Sys_error _ -> ();
-    Format.fprintf ff "@."
+    Format.fprintf ff "@.\n"

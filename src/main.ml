@@ -42,9 +42,13 @@ let () =
         
   if !ofile="" then ofile := Filename.chop_suffix !ifile ".hs" ^ ".s";
   
+  Error.set_file !ifile;
+  
+  
   (* Création d'un tampon d'analyse lexicale *)
   let buf = Lexing.from_channel f in
   try
+    
     let p = Parser.fichier Lexer.token buf in begin
     close_in f;
     
@@ -69,20 +73,20 @@ let () =
     | Lexer.Lexing_error c ->
         (* Erreur lexicale. On récupère sa position absolue et
            on la convertit en numéro de ligne *)
-        localisationAffiche (Lexing.lexeme_start_p buf, Lexing.lexeme_end_p buf);
-        eprintf "lexing error: %s@." c;
+        Error.print_location (Format.err_formatter) (Error.Loc(Lexing.lexeme_start_p buf, Lexing.lexeme_end_p buf));
+        eprintf "\nlexing error: %s@.\n" c;
         exit 1
     | Parser.Error ->
         (* Erreur syntaxique. On récupère sa position absolue et on la
            convertit en numéro de ligne *)
-        localisationAffiche (Lexing.lexeme_start_p buf, Lexing.lexeme_end_p buf);
-        eprintf "syntax error@.";
+        Error.print_location (Format.err_formatter) (Error.Loc(Lexing.lexeme_start_p buf, Lexing.lexeme_end_p buf));
+        eprintf "\nsyntax error@.\n";
         exit 1
         
     | Typage.Typing_error (c,s) ->
         (* Erreur de type : on récupère les coordonnées dans c:loc*)
         localisationAffiche (c);
-        eprintf "typing error: %s@." s;
+        eprintf "typing error: %s@.\n" s;
         exit 1 
     (*| Alloc.VarUndef s-> 
         (* Erreur d'utilisation de variable pendant la compilation *)
