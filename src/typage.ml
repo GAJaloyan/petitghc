@@ -289,6 +289,8 @@ and tprogramd =
   defs : tdef0 list;
   }
   
+let typtostr t = printtyp (Format.str_formatter) t; Format.flush_str_formatter () 
+
 (*types : 
 | Tbool
   | Tchar
@@ -305,7 +307,7 @@ let wpasdedoublon (l:string list) (ll:Ast.loc) =
   let rec aux (l:string list) =
     match l with
     |[] -> ()
-    |a::b -> (if (SS.mem a !dejaVu) then raise (Typing_error (ll,"L'argument \""^ a ^"\" est défini deux fois." )) 
+    |a::b -> (if (SS.mem a !dejaVu) then raise (Typing_error (ll,"parameter \""^ a ^"\" is defined several times." )) 
           else  dejaVu := (SS.add a !dejaVu));
           aux b
   in aux l
@@ -331,8 +333,8 @@ let wconst env (cons:Ast.const) : tconst =
 let rec verifierListe (l1:Ast.expr list) (l2:texpr list) typvoulu : unit =
   match l2 with
   | [] -> ()
-  | a::b -> (try (unify a.typ Tunit) with 
-              |_ -> raise (Typing_error ((List.hd l1).loc,"L'instruction n'est pas du type voulu")));
+  | a::b -> (try (unify a.typ typvoulu) with 
+              |_ -> raise (Typing_error ((List.hd l1).loc,"this expression has type "^ (typtostr a.typ) ^ " while type " ^(typtostr typvoulu)^ " was expected.")));
             verifierListe (List.tl l1) b typvoulu
             
 let wtesterletliste (liste:Ast.def list) env =
@@ -342,7 +344,7 @@ let wtesterletliste (liste:Ast.def list) env =
   |[] -> env
   |({desc=({gauche=nom;formals=_;body=_}:Ast.defd);loc=localisation}:Ast.def)::b -> 
     begin
-        (if (SS.mem nom !dejaVu) then raise (Typing_error (localisation,"La variable \""^ nom ^ "\" est définie plusieurs fois." )) 
+        (if (SS.mem nom !dejaVu) then raise (Typing_error (localisation,"variable \""^ nom ^ "\" is defined several times." )) 
           else  dejaVu := (SS.add nom !dejaVu));
           let v = Tvar(V.create ()) in
           let env = (add true nom (v) env) in
@@ -360,7 +362,7 @@ let rec wsexprlist env (sexprliste : Ast.simple_expr list) : ((tsimple_expr list
            let tb,typp = wsexprlist env b in (*typp type t1*)
            let v = Tvar (V.create ()) in
            begin
-            (try (unify ta.typ (Tarrow (typp, v))) with |_ -> raise (Typing_error (a.loc,"Impossible d'unifier l'expression e1 e2")));
+            (try (unify ta.typ (Tarrow (typp, v))) with |_ -> raise (Typing_error (a.loc,"the expression e1 e2 has type "^(typtostr (Tarrow (typp, v)))^" while type "^(typtostr ta.typ)^" was expected.")));
             (ta::tb, v)
             (*type t2*)
            end
@@ -380,8 +382,6 @@ and wsexpr env (sexpr:Ast.simple_expr) : tsimple_expr =
   match sexpr.desc with
   |SEexpr (e) -> let te = wexpr env e in {desc=SEexpr(te);typ=te.typ}
   |SEconst (c) -> let tc = wconst env c in {desc=SEconst(tc); typ = tc.typ}
-  (*|Var x ->
-      find x env*)
   |SEident (s) -> let ts = find s env in {desc=SEident(s); typ = ts}
   |SEblock (liste) -> let tliste, typliste = wliste env liste in {desc=SEblock(tliste);typ =Tlist(typliste)}
 
@@ -393,37 +393,29 @@ and wliste env (liste:Ast.expr list) : (texpr list*typ) =
       let ta = wexpr env a in
       begin
         (try (unify ta.typ typq) with 
-              |_ -> raise (Typing_error (a.loc,"La liste n'a pas un type constant")));
+              |_ -> raise (Typing_error (a.loc,"this element has type "^ (typtostr ta.typ)^ " while the list has type "^(typtostr typq)^ " .")));
         ta::tq,typq
       end
 
 and wexpr env (expr : Ast.expr) : texpr = 
   let localisation = expr.loc in 
   match expr.desc with
-  (*--| Eatomiclist of simple_expr list
-  --| Elambda of lambda
-  --| Ebinop of binop * expr * expr Add | Sub | Mul | Infe | Supe | Infs | Sups | Uneq | Eq | And | Or | Head
-  --| Eif of expr*expr*expr
-  --| Elet of (def list)*(expr)
-  --| Ecase of expr*expr*string*string*expr
-  --| Edo of expr list
-  --| Ereturn*)
   |Eatomiclist (liste) -> let (tliste, typfinal) = wsexprlist env liste in
               {desc=Eatomiclist(tliste);typ=typfinal}
   |Ecase(e1,e2,x1,x2,e3) -> 
   if ((String.compare x1 x2) = 0) 
-    then raise (Typing_error (localisation,"La construction case n'est pas valide (x1:x2 doivent être differents)."))
+    then raise (Typing_error (localisation,"case construction invalid (x1 and x2 have to be different in case _ of {_; x1:x2 -> _})."))
     else 
     let te1 = (wexpr env e1) in let t1 = te1.typ in
     let te2 = (wexpr env e2) in let t2 = te2.typ in
     let v = Tvar(V.create ()) in 
     begin
-      (try (unify t1 (Tlist(v))) with |_ -> raise (Typing_error (localisation,"case e1 of : e1 n'est pas du type list.")));
+      (try (unify t1 (Tlist(v))) with |_ -> raise (Typing_error (e1.loc,"case e1 of : e1 is of type "^(typtostr t1)^" while type 'a list was expected.")));
       let env = (add false x1 (v) env) in
       let env = (add false x2 (Tlist(v)) env) in
       let te3 = wexpr env e3 in let t3 = te3.typ in
       begin
-        (try (unify t2 t3) with |_ -> raise (Typing_error (localisation,"case : les types ne match pas")));
+        (try (unify t2 t3) with |_ -> raise (Typing_error (localisation,"case _ of {_ -> e2; _ -> e3} : e2 has type " ^(typtostr t2)^ " and e3 has type "^(typtostr t3)^" :unable to unify both types.")));
         {desc=Ecase(te1,te2,x1,x2,te3);typ=t2}
       end
     end
@@ -547,33 +539,6 @@ and wexpr env (expr : Ast.expr) : texpr =
         let tex = wexpr env ex in let tt = tex.typ in
         {desc=Elet(tliste, tex);typ=tt}
       end
-  (*--| Var x ->
-      find x env
-  --| Const _ ->
-      Tint
-  --| Op "+" ->
-      Tarrow (Tproduct (Tint, Tint), Tint)
-  --| Op op ->
-      failwith ("pas d'opérateur " ^ op)
-  --| Pair (e1, e2) ->
-      let t1 = w env e1 in
-      let t2 = w env e2 in
-      Tproduct (t1, t2)
-  --| Fun (x, exp) ->
-      let v = Tvar (V.create ()) in
-      let env = add false x v env in
-      let te = w env exp in
-      Tarrow (v, te)
-  --| App (e1, e2) ->
-      let t1 = w env e1 in
-      let t2 = w env e2 in
-      let v = Tvar (V.create ()) in
-      unify t1 (Tarrow (t2, v));
-      v
-  | Let (x, e1, e2) ->
-      let t1 = w env e1 in
-      let env = add true x t1 env in
-      w env e2*)
 
 let mainpresent = ref false
 
@@ -638,13 +603,6 @@ let rec wtyperliste (l:Ast.def0 list) env : (tdef0 list * env) =
 and wtyperunefonction nom args corps env :tdef0 =
       match args with
       |[] -> let ({desc=dexpr;typ=typ1}:texpr) = wexpr env corps in {desc={gauche0=nom;formals0=[];body0={desc=dexpr;typ=typ1}};typ=typ1}
-      (*|h::[] -> begin (*On bidouille le type de retour pour virer le Tunit en tête*)
-                let v = Tvar(V.create ()) in
-                let env = add false h v env in 
-                let {desc=({gauche0=nom; formals0=argretour; body0=corpsretour}:tdef0d); typ = Tarrow(Tunit,typ1)}:tdef0 = wtyperunefonction nom [] corps env in
-                  let typearg = find h env in
-                  ({desc=({gauche0=nom;  formals0=(h::argretour); body0=corpsretour}:tdef0d);typ=Tarrow(typearg,typ1)}:tdef0)
-              end*)
       |h::t ->
               begin
                 let v = Tvar(V.create ()) in
