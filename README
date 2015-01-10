@@ -145,8 +145,9 @@ Difficulties:
 Due to the difficulty debugging of the code generation phase, we decided to
 merge our two project and to make it together. We reused mainly Georges-
 Axel's code for the front end, while the back end convention comes from
-Cyrille's code, this explains the difference of convention in the
-implementation.
+Cyrille's code, this explains the difference of conventions in the
+implementation and the presence of an adpat.ml file to make the transition
+between the two representations.
 
 The main difficulties was the unfamiliarity with the tools and some technic
 details of the assignment.
