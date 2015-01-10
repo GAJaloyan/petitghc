@@ -49,7 +49,7 @@ let () =
     (* On s'arrête ici si on ne veut faire que le parsing *)
     if !parse_only then begin  Printer.print_fichier p; exit 0; end;
 
-    let _ = Typage.typeof p in
+    let tp = Typage.typeof p in
     
     if !type_only then begin Typprinter.tprint_fichier tp; exit 0; end;
     
