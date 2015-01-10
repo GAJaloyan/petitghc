@@ -38,13 +38,9 @@ let rec print_expr pere (e:Inter.expr) =
     end
   | Lambda(id, expr) -> let s = (string_of_int !i) in begin
     i:= !i+1;
-    printf "%s [label=\"Lambda \",color=green,style=filled]\n" s;
+    printf "%s [label=\"Lambda \\\"%s\\\"\",color=mediumseagreen,style=filled]\n" s id;
     printf "%s -> %s\n" pere s;
-    let s2 = (string_of_int !i) in begin
-      i:= !i+1;
-      printf "%s [label=\"%s\",color=gold,style=filled]\n" s2 id;
-      printf "%s -> %s\n" s s2;
-      print_expr s2 expr;end; 
+    print_expr s expr
     end
   | Neg (e) -> let s = (string_of_int !i) in begin
     i:= !i+1;
@@ -105,32 +101,32 @@ let rec print_expr pere (e:Inter.expr) =
     end
   | Id (liste) -> let s = (string_of_int !i) in begin
     i:= !i+1;
-    printf "%s [label=\"Id \\\"%s\\\"\",color=skyblue1,style=filled]\n" s liste;
+    printf "%s [label=\"Id \\\"%s\\\"\",color=lightsalmon2,style=filled]\n" s liste;
     printf "%s -> %s\n" pere s
     end
   | True -> let s = (string_of_int !i) in begin
     i:= !i+1;
-    printf "%s [label=\"True\",color=skyblue1,style=filled]\n" s;
+    printf "%s [label=\"True\",color=lightsalmon2,style=filled]\n" s;
     printf "%s -> %s\n" pere s
     end
   | False -> let s = (string_of_int !i) in begin
     i:= !i+1;
-    printf "%s [label=\"False\",color=skyblue1,style=filled]\n" s;
+    printf "%s [label=\"False\",color=lightsalmon2,style=filled]\n" s;
     printf "%s -> %s\n" pere s
     end
   | Int (valeur) ->  let s = (string_of_int !i) in begin
     i:= !i+1;
-    printf "%s [label=\"Int %d\",color=skyblue1,style=filled]\n" s valeur;
+    printf "%s [label=\"Int %d\",color=lightsalmon2,style=filled]\n" s valeur;
     printf "%s -> %s\n" pere s
     end
   | Char(c) ->  let s = (string_of_int !i) in begin
     i:= !i+1;
-    printf "%s [label=\"Char %c\",color=skyblue1,style=filled]\n" s c;
+    printf "%s [label=\"Char %c\",color=lightsalmon2,style=filled]\n" s c;
     printf "%s -> %s\n" pere s
     end
   | EmptyList ->  let s = (string_of_int !i) in begin
     i:= !i+1;
-    printf "%s [label=\"[]\",color=skyblue1,style=filled]\n" s;
+    printf "%s [label=\"[]\",color=lightsalmon2,style=filled]\n" s;
     printf "%s -> %s\n" pere s
     end
 
