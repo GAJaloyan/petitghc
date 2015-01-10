@@ -85,29 +85,6 @@ let rec unify t1 t2 = match head t1, head t2 with
   | t1, t2 ->
       unification_error t1 t2
 
-(* tests*)
-
-let () =
-  let a = V.create () in
-  let b = V.create () in
-  let ta = Tvar a in
-  let tb = Tvar b in
-  assert (occur a ta);
-  assert (occur b tb);
-  assert (not (occur a tb));
-  let ty = Tarrow (ta, tb) in
-  assert (occur a ty);
-  assert (occur b ty);
-  (* unifie 'a-> 'b et int->int *)
-  unify ty (Tarrow (Tint, Tint));
-  assert (canon ta = Tint);
-  assert (canon ty = Tarrow (Tint, Tint));
-  (* unifie 'c et int->int *)
-  let c = V.create () in
-  let tc = Tvar c in
-  unify tc ty;
-  assert (canon tc = Tarrow (Tint, Tint))
-
 let cant_unify ty1 ty2 =
   try let _ = unify ty1 ty2 in false with UnificationFailure _ -> true
 
