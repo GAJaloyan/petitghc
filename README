@@ -1,3 +1,6 @@
+Compilation : Petit Haskell to MIPS
+Ruggero Cyrille and Jaloyan Georges-Axel
+
 This is my compilation project for the course on compilation at the ENS Paris. The goal
 is to make a compiler for a portion of haskell, called Petit Haskell, producted in MIPS. It
 contains only integers and lists and is 100% compatible with Haskell.
@@ -85,4 +88,12 @@ ocaml version 4.02.1
 dot - graphviz version 2.36.0
 rsync version 3.1.0
 
+============================================
+[À traduire en anglais] Difficultés :
+
+
+La principale difficulté a été la nouveauté des outils, en plus des quelques détails spécifiques au sujet :
+
+- Le lexer / parser a été un peu revu pour adapter la forme de l'ast (transformations du type def0 a b c = e --> def0 = \ a b c -> e), et stocker les informations de localisation de façon plus précise. 
+- Le typage a été fait en grande partie grâce au TD 4, la gestion des erreurs a été faite de façon rigoureuse (pour se rapprocher de celle d'Ocaml), avec un morceau de code du cours de Système digital adapté pour afficher proprement les erreurs.
 
