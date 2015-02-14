@@ -1,5 +1,4 @@
 Compilation : Petit Haskell to MIPS
-Ruggero Cyrille and Jaloyan Georges-Axel
 
 This is our compilation project for the course on compilation at the ENS Paris. The goal
 is to make a compiler for a portion of haskell, called Petit Haskell, producted in MIPS. It
