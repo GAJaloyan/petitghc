@@ -1,5 +1,8 @@
 Compilation : Petit Haskell to MIPS
 
+
+[![Build Status](https://travis-ci.org/GAJaloyan/petitghc.svg?branch=master)](https://travis-ci.org/GAJaloyan/petitghc)
+    
 This is our compilation project for the course on compilation at the ENS Paris. The goal
 is to make a compiler for a portion of haskell, called Petit Haskell, producted in MIPS. It
 contains only integers and lists and is 100% compatible with Haskell.
