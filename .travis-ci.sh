@@ -30,7 +30,7 @@ esac
 opam init -a
 opam switch 4.02.3 -a 
 eval `opam config env`
-opam install ocamlbuild menhir -a
+opam install ocamlbuild menhir -y
 
 #compiling the project
 $BUILD
