@@ -27,10 +27,10 @@ case $TRAVIS_OS_NAME in
 esac
 
 #opam stuff
-opam init
-opam switch 4.02.3
-`opam config env`
-opam install ocamlbuild menhir
+opam init -a
+opam switch 4.02.3 -a 
+`opam config env` -a
+opam install ocamlbuild menhir -a
 
 #compiling the project
 $BUILD
