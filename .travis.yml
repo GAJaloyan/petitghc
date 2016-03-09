@@ -1,13 +1,13 @@
 language: c
-    script: bash -ex .travis-ci.sh
-    matrix:
-      include:
-        - os: linux
-          env: OCAML_VERSION=4.02.3 TEST=./testprettyparse.sh
-        - os: linux
-          env: OCAML_VERSION=4.02.3 TEST=./testprettytype.sh
-        - os: linux
-          env: OCAML_VERSION=4.02.3 TEST=./testprettysimplify.sh
-        - os: linux
-          env: OCAML_VERSION=4.02.3 TEST=./test.sh
+script: bash -ex .travis-ci.sh
+matrix:
+  include:
+    - os: linux
+      env: OCAML_VERSION=4.02.3 TEST=./testprettyparse.sh
+    - os: linux
+      env: OCAML_VERSION=4.02.3 TEST=./testprettytype.sh
+    - os: linux
+      env: OCAML_VERSION=4.02.3 TEST=./testprettysimplify.sh
+    - os: linux
+      env: OCAML_VERSION=4.02.3 TEST=./test.sh
 
