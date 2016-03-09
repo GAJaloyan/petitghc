@@ -6,7 +6,7 @@ install_on_linux () {
     
     ppa=avsm/ocaml42+opam12
     
-    sudo add-apt-repository ppa:$ppa
+    sudo add-apt-repository ppa:$ppa -y
     sudo apt-get update -qq
     sudo apt-get install -qq opam
     sudo apt-get install -qq spim
